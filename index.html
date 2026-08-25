@@ -241,9 +241,8 @@ header.top::after{
 .section-head h2::before{
   content:""; width:8px; height:8px; background:var(--rule-red); border-radius:2px; display:inline-block;
 }
-.main-row{ display:flex; align-items:flex-start; gap:24px; flex-wrap:wrap; }
-.main-row .section-head{ margin:34px 0 0; flex:0 0 auto; }
-.main-row .ledger-scroll{ flex:1 1 400px; min-width:280px; margin-top:34px; }
+.schedule-toggle-row{ display:flex; align-items:flex-start; gap:16px; flex-wrap:wrap; margin:34px 0 0; }
+.schedule-toggle-row .ledger-scroll{ flex:1 1 400px; min-width:280px; }
 .head-actions{ display:flex; flex-direction:column; gap:12px; max-width:420px; }
 .btn{
   font-family:'Tajawal', sans-serif; font-weight:700; font-size:14px;
@@ -397,6 +396,21 @@ tr:nth-child(even) .lesson-cell{ background:rgba(124,152,133,0.05); }
 }
 .toast.show{ opacity:1; transform:translateY(0); }
 
+.confirm-overlay{
+  position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:100;
+  display:none; align-items:center; justify-content:center; padding:20px;
+}
+.confirm-overlay.show{ display:flex; }
+.confirm-box{
+  background:var(--card); border-radius:14px; padding:24px; max-width:360px; width:100%;
+  box-shadow:0 12px 30px rgba(0,0,0,0.25); text-align:center;
+}
+.confirm-message{ font-size:15px; color:var(--ink); margin-bottom:20px; line-height:1.6; font-weight:700; }
+.confirm-actions{ display:flex; gap:10px; justify-content:center; }
+.confirm-actions .btn{ flex:1; justify-content:center; }
+.confirm-danger-btn{ background:var(--rule-red); color:#fff; }
+.confirm-danger-btn:hover{ filter:brightness(0.92); }
+
 footer.tip{ text-align:center; color:var(--ink-soft); font-size:11.5px; margin-top:36px; }
 
 /* ===== Months modal & month detail modal ===== */
@@ -420,16 +434,49 @@ footer.tip{ text-align:center; color:var(--ink-soft); font-size:11.5px; margin-t
 .modal-body{ padding:18px; overflow-y:auto; }
 
 .months-grid{
-  display:grid; grid-template-columns:repeat(3,1fr); gap:10px;
+  display:flex; flex-direction:column; gap:12px; max-width:460px;
 }
-@media(max-width:480px){ .months-grid{ grid-template-columns:repeat(2,1fr); } }
+.months-row{ display:flex; align-items:flex-start; gap:24px; flex-wrap:wrap; }
+.month-detail-panel{
+  flex:1 1 340px; min-width:280px; background:var(--card); border:1px solid var(--paper-line);
+  border-radius:14px; box-shadow:var(--shadow); padding:18px;
+}
+.month-detail-head{ margin-bottom:14px; }
+.month-detail-head h3{ font-family:'Markazi Text'; font-size:20px; color:var(--chalkboard); }
 .month-card{
-  background:var(--card); border:1.5px solid var(--paper-line); border-radius:12px;
-  padding:16px 8px; text-align:center; cursor:pointer; transition:.15s;
+  background:var(--card); border:none; border-radius:12px;
+  padding:16px 20px; text-align:center; cursor:pointer;
+  transition:top .08s, box-shadow .08s; position:relative; top:0;
+  box-shadow: 0 5px 0 rgba(0,0,0,0.22), 0 7px 10px rgba(0,0,0,0.14);
 }
-.month-card:hover{ border-color:var(--mustard); background:rgba(200,155,60,0.08); }
-.month-card .m-name{ font-family:'Markazi Text'; font-weight:700; font-size:17px; color:var(--chalkboard); }
-.month-card .m-count{ font-size:11px; color:var(--ink-soft); margin-top:4px; }
+.month-card:active{ top:4px; box-shadow: 0 1px 0 rgba(0,0,0,0.22), 0 2px 4px rgba(0,0,0,0.12); }
+.month-card-active{ outline:3px solid var(--rule-red); outline-offset:2px; }
+.month-card:nth-child(9n+1){ background:var(--chalkboard); }
+.month-card:nth-child(9n+2){ background:var(--mustard); }
+.month-card:nth-child(9n+3){ background:var(--sage); }
+.month-card:nth-child(9n+4){ background:var(--rule-red); }
+.month-card:nth-child(9n+5){ background:var(--chalkboard-dark); }
+.month-card:nth-child(9n+6){ background:var(--mustard-light); }
+.month-card:nth-child(9n+7){ background:var(--sage); filter:brightness(0.85); }
+.month-card:nth-child(9n+8){ background:var(--chalkboard); filter:brightness(1.25); }
+.month-card:nth-child(9n+9){ background:var(--rule-red); filter:brightness(0.85); }
+.month-card .m-name{ font-family:'Markazi Text'; font-weight:700; font-size:19px; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,0.25); }
+.month-card .m-count{ font-size:12px; color:rgba(255,255,255,0.9); margin-top:4px; }
+.month-card:nth-child(9n+2) .m-name, .month-card:nth-child(9n+6) .m-name{ color:var(--chalkboard-dark); text-shadow:none; }
+.month-card:nth-child(9n+2) .m-count, .month-card:nth-child(9n+6) .m-count{ color:var(--chalkboard-dark); opacity:0.75; }
+.months-col{ display:flex; flex-direction:column; gap:14px; }
+.months-add-row{ display:flex; gap:8px; max-width:460px; }
+.months-add-row input{
+  flex:1; border:1.5px solid var(--paper-line); border-radius:10px; padding:10px 12px;
+  font-family:'Tajawal'; font-size:13px; background:var(--card); color:var(--ink); outline:none;
+}
+.months-add-row input:focus{ border-color:var(--mustard); }
+.month-card-del{
+  position:absolute; top:8px; left:10px; background:rgba(0,0,0,0.18); border:none; color:#fff;
+  width:22px; height:22px; border-radius:50%; font-size:12px; cursor:pointer; line-height:1;
+  display:flex; align-items:center; justify-content:center;
+}
+.month-card-del:hover{ background:rgba(0,0,0,0.35); }
 
 /* ===== Full page daily-plan editor ===== */
 .full-page{
@@ -720,25 +767,8 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
     </div>
   </div>
 
-  <div class="main-row">
-    <div class="section-head">
-      <div class="head-actions">
-        <button class="btn btn-outline" id="annualOpenBtn">📅 الخطة السنوية</button>
-        <button class="btn btn-outline" id="plansOpenBtn">📘 الخطة اليومية</button>
-        <button class="btn btn-solid" id="scheduleToggleBtn">👁️ إظهار الجدول</button>
-        <button class="btn btn-outline" id="masterOpenBtn">🗂️ ماستر شيت الدرجات</button>
-        <button class="btn btn-outline" id="dailyExamOpenBtn">📝 أسئلة الامتحانات اليومية</button>
-        <button class="btn btn-outline" id="examOpenBtn">📝 أسئلة الامتحانات الشهرية</button>
-        <button class="btn btn-outline" id="notesOpenBtn">🗒️ الملاحظات</button>
-        <button class="btn btn-outline" id="backupExportBtn">💾 نسخة احتياطية</button>
-        <label class="btn btn-outline" id="backupImportLabel">📂 استيراد نسخة
-          <input type="file" accept="application/json" id="backupImportInput" hidden>
-        </label>
-        <button class="btn btn-outline" id="trashOpenBtn">🗑️ سلة المحذوفات</button>
-        <button class="btn btn-outline" id="booksOpenBtn">📚 الكتب المنهجية</button>
-        <button class="btn btn-outline" id="backupExcelBtn">📊 نسخة إكسل</button>
-      </div>
-    </div>
+  <div class="schedule-toggle-row">
+    <button class="btn btn-solid" id="scheduleToggleBtn">👁️ إظهار الجدول</button>
 
     <div class="ledger-scroll" id="ledgerScroll" style="display:none;">
       <div class="ledger-toolbar">
@@ -765,6 +795,24 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
     </div>
   </div>
 
+  <div class="section-head">
+    <div class="head-actions">
+      <button class="btn btn-outline" id="annualOpenBtn">📅 الخطة السنوية</button>
+      <button class="btn btn-outline" id="plansOpenBtn">📘 الخطة اليومية</button>
+      <button class="btn btn-outline" id="masterOpenBtn">🗂️ ماستر شيت الدرجات</button>
+      <button class="btn btn-outline" id="dailyExamOpenBtn">📝 أسئلة الامتحانات اليومية</button>
+      <button class="btn btn-outline" id="examOpenBtn">📝 أسئلة الامتحانات الشهرية</button>
+      <button class="btn btn-outline" id="notesOpenBtn">🗒️ الملاحظات</button>
+      <button class="btn btn-outline" id="backupExportBtn">💾 نسخة احتياطية</button>
+      <label class="btn btn-outline" id="backupImportLabel">📂 استيراد نسخة
+        <input type="file" accept="application/json" id="backupImportInput" hidden>
+      </label>
+      <button class="btn btn-outline" id="trashOpenBtn">🗑️ سلة المحذوفات</button>
+      <button class="btn btn-outline" id="booksOpenBtn">📚 الكتب المنهجية</button>
+      <button class="btn btn-outline" id="backupExcelBtn">📊 نسخة إكسل</button>
+    </div>
+  </div>
+
   <footer class="tip">الجدول ثابت أسبوعياً — اضغط «تعديل الجدول» للتحديث، وستُحفظ التغييرات تلقائياً.</footer>
 </div>
 
@@ -784,27 +832,29 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
   </div>
 </div>
 
-<!-- نافذة اختيار الشهر -->
-<div class="modal-box" id="monthsModal">
-  <div class="modal-head">
-    <h3>الخطة اليومية — اختر الشهر</h3>
-    <button class="drawer-close" id="monthsModalClose">✕</button>
+<!-- صفحة اختيار الشهر + تفاصيل الشهر بجانبها -->
+<div class="full-page" id="monthsPage">
+  <div class="fp-header">
+    <button class="fp-back" id="monthsPageBackBtn">→ رجوع</button>
+    <h2>الخطة اليومية</h2>
   </div>
-  <div class="modal-body">
-    <div class="months-grid" id="monthsGrid"></div>
-  </div>
-</div>
-
-<!-- نافذة خطط شهر محدد -->
-<div class="modal-box" id="monthDetailModal">
-  <div class="modal-head">
-    <button class="back-btn" id="monthBackBtn">→ الأشهر</button>
-    <h3 id="monthDetailTitle">شهر</h3>
-    <button class="drawer-close" id="monthDetailClose">✕</button>
-  </div>
-  <div class="modal-body">
-    <button class="btn btn-solid" id="newPlanBtn" style="width:100%; justify-content:center; margin-bottom:14px;">＋ خطة يومية جديدة</button>
-    <div class="notes-list" id="monthPlansList"></div>
+  <div class="fp-body">
+    <div class="months-row">
+      <div class="months-col">
+        <div class="months-add-row">
+          <input type="text" id="newMonthInput" placeholder="اسم الشهر الجديد">
+          <button class="btn btn-solid" id="addMonthBtn">＋ إضافة شهر</button>
+        </div>
+        <div class="months-grid" id="monthsGrid"></div>
+      </div>
+      <div class="month-detail-panel" id="monthDetailPanel" style="display:none;">
+        <div class="month-detail-head">
+          <h3 id="monthDetailTitle">شهر</h3>
+        </div>
+        <button class="btn btn-solid" id="newPlanBtn" style="width:100%; justify-content:center; margin-bottom:14px;">＋ خطة يومية جديدة</button>
+        <div class="notes-list" id="monthPlansList"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1193,6 +1243,17 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
 
 <div class="toast" id="toast"></div>
 
+<!-- نافذة تأكيد الحذف العامة -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-message" id="confirmMessage">هل أنت متأكد من الحذف؟</div>
+    <div class="confirm-actions">
+      <button class="btn btn-outline" id="confirmCancelBtn">إلغاء</button>
+      <button class="btn confirm-danger-btn" id="confirmOkBtn">🗑️ حذف</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const DAYS = ["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس"];
 const DEFAULT_PERIODS = [
@@ -1204,8 +1265,8 @@ const DEFAULT_PERIODS = [
   {name:"الحصة السادسة", time:"12:00 - 12:45"},
 ];
 
-/* من الشهر التاسع (أيلول) إلى الشهر الخامس (أيار) = 9 أشهر */
-const MONTHS = ["أيلول","تشرين الأول","تشرين الثاني","كانون الأول","كانون الثاني","شباط","آذار","نيسان","أيار"];
+/* من الشهر التاسع (أيلول) إلى الشهر الخامس (أيار) = 9 أشهر (قائمة افتراضية، قابلة للتعديل) */
+const DEFAULT_MONTHS = ["أيلول","تشرين الأول","تشرين الثاني","كانون الأول","كانون الثاني","شباط","آذار","نيسان","أيار"];
 
 let state = {
   theme: "default",
@@ -1223,6 +1284,7 @@ let state = {
   lessons: Array.from({length:6}, ()=> Array.from({length:5}, ()=> ({subj:"", cls:""}))),
   notes: [],
   dailyPlans: {},
+  months: [],
   masterSheet: { year:'', grade:'', students: [] },
   masterSheets: [],
   examPaper: { subject:'', grade:'', date:'', time:'', title:'', questions:[] },
@@ -1241,6 +1303,29 @@ function toast(msg){
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+function confirmAction(message){
+  return new Promise(resolve=>{
+    const overlay = document.getElementById('confirmOverlay');
+    document.getElementById('confirmMessage').textContent = message;
+    overlay.classList.add('show');
+    const okBtn = document.getElementById('confirmOkBtn');
+    const cancelBtn = document.getElementById('confirmCancelBtn');
+    function cleanup(result){
+      overlay.classList.remove('show');
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      overlay.removeEventListener('click', onOverlay);
+      resolve(result);
+    }
+    function onOk(){ cleanup(true); }
+    function onCancel(){ cleanup(false); }
+    function onOverlay(e){ if(e.target === overlay) cleanup(false); }
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+    overlay.addEventListener('click', onOverlay);
+  });
 }
 
 async function loadState(){
@@ -1262,6 +1347,7 @@ async function loadState(){
   purgeOldTrash();
   ensureAnnualPlans();
   ensureMasterSheets();
+  ensureMonths();
   applyTheme(state.theme || 'default');
   applyScheduleColor(state.scheduleTextColor || '');
   applyScheduleFontScale(state.scheduleFontScale || 1);
@@ -1577,10 +1663,11 @@ document.getElementById('addPeriodBtn').addEventListener('click', ()=>{
   saveState(false);
 });
 
-document.getElementById('scheduleBody').addEventListener('click', (e)=>{
+document.getElementById('scheduleBody').addEventListener('click', async (e)=>{
   if(!e.target.classList.contains('period-row-del')) return;
   const r = parseInt(e.target.getAttribute('data-r'), 10);
   const period = state.periods[r];
+  if(!(await confirmAction(`هل تريد حذف حصة "${period ? period.name : ''}"؟`))) return;
   const lessonsRow = state.lessons[r];
   if(period) moveToTrash('period', period.name || 'حصة بدون اسم', { period, lessonsRow }, { index: r });
   state.periods.splice(r, 1);
@@ -1616,6 +1703,7 @@ document.getElementById('addNoteBtn').addEventListener('click', async ()=>{
 document.getElementById('notesList').addEventListener('click', async (e)=>{
   if(e.target.classList.contains('note-del')){
     const id = e.target.getAttribute('data-id');
+    if(!(await confirmAction('هل تريد حذف هذه الملاحظة؟'))) return;
     const n = state.notes.find(x => String(x.id) === id);
     if(n) moveToTrash('note', (n.text||'').slice(0,40) || 'ملاحظة بدون نص', n, {});
     state.notes = state.notes.filter(n => String(n.id) !== id);
@@ -1624,44 +1712,44 @@ document.getElementById('notesList').addEventListener('click', async (e)=>{
   }
 });
 
-/* ================== نظام الخطة اليومية: أشهر + صفحة كاملة ================== */
-const monthsModal = document.getElementById('monthsModal');
-const monthDetailModal = document.getElementById('monthDetailModal');
+/* ================== نظام الخطة اليومية: أشهر + لوحة تفاصيل بجانبها ================== */
+const monthsPage = document.getElementById('monthsPage');
+const monthDetailPanel = document.getElementById('monthDetailPanel');
 const planEditorPage = document.getElementById('planEditorPage');
 
-function openMonthsModal(){
-  overlay.classList.add('show');
-  monthsModal.classList.add('show');
+function ensureMonths(){
+  if(!Array.isArray(state.months) || state.months.length === 0){
+    state.months = DEFAULT_MONTHS.slice();
+  }
+}
+
+function openMonthsPage(){
+  ensureMonths();
+  monthsPage.classList.add('show');
+  monthDetailPanel.style.display = 'none';
+  activeMonth = null;
   renderMonthsGrid();
 }
-function closeMonthsModal(){
-  monthsModal.classList.remove('show');
-  overlay.classList.remove('show');
+function closeMonthsPage(){
+  monthsPage.classList.remove('show');
 }
 function openMonthDetail(month){
   activeMonth = month;
-  monthsModal.classList.remove('show');
-  monthDetailModal.classList.add('show');
-  overlay.classList.add('show');
+  monthDetailPanel.style.display = 'block';
   document.getElementById('monthDetailTitle').textContent = 'خطط شهر ' + month;
   renderMonthPlans();
-}
-function closeMonthDetail(){
-  monthDetailModal.classList.remove('show');
-  overlay.classList.remove('show');
-}
-function backToMonths(){
-  monthDetailModal.classList.remove('show');
-  monthsModal.classList.add('show');
   renderMonthsGrid();
 }
 
 function renderMonthsGrid(){
+  ensureMonths();
   const grid = document.getElementById('monthsGrid');
-  grid.innerHTML = MONTHS.map(m=>{
+  grid.innerHTML = state.months.map(m=>{
     const count = (state.dailyPlans[m] || []).length;
-    return `<div class="month-card" data-month="${m}">
-      <div class="m-name">${m}</div>
+    const activeClass = (m === activeMonth) ? ' month-card-active' : '';
+    return `<div class="month-card${activeClass}" data-month="${esc(m)}">
+      <button class="month-card-del" data-month="${esc(m)}" title="حذف الشهر">✕</button>
+      <div class="m-name">${esc(m)}</div>
       <div class="m-count">${count} خطة</div>
     </div>`;
   }).join('');
@@ -1694,6 +1782,7 @@ function renderMonthPlans(){
     btn.addEventListener('click', async (e)=>{
       e.stopPropagation();
       const id = btn.getAttribute('data-id');
+      if(!(await confirmAction('هل تريد حذف هذه الخطة اليومية؟'))) return;
       const p = (state.dailyPlans[activeMonth]||[]).find(x=>String(x.id)===id);
       if(p) moveToTrash('plan', p.title || 'خطة يومية بدون عنوان', p, { month: activeMonth });
       state.dailyPlans[activeMonth] = (state.dailyPlans[activeMonth]||[]).filter(x=>String(x.id)!==id);
@@ -1817,8 +1906,7 @@ function openPlanEditor(planId){
     delBtn.style.display = 'none';
   }
 
-  monthDetailModal.classList.remove('show');
-  monthsModal.classList.remove('show');
+  monthsPage.classList.remove('show');
   overlay.classList.remove('show');
   planEditorPage.classList.add('show');
   applyTextStyle('plan');
@@ -1826,49 +1914,125 @@ function openPlanEditor(planId){
 }
 
 function closePlanEditor(){
+  if(editingPlanId){
+    const p = (state.dailyPlans[activeMonth]||[]).find(x=>String(x.id)===String(editingPlanId));
+    if(p){
+      p.principalSig = isCanvasBlank(principalCanvas) ? '' : principalCanvas.toDataURL('image/png');
+      p.supervisorSig = isCanvasBlank(supervisorCanvas) ? '' : supervisorCanvas.toDataURL('image/png');
+      saveState(false);
+    }
+  }
   planEditorPage.classList.remove('show');
-  monthDetailModal.classList.add('show');
-  overlay.classList.add('show');
+  monthsPage.classList.add('show');
+  renderMonthsGrid();
   renderMonthPlans();
 }
 
-document.getElementById('plansOpenBtn').addEventListener('click', openMonthsModal);
-document.getElementById('monthsModalClose').addEventListener('click', closeMonthsModal);
-document.getElementById('monthDetailClose').addEventListener('click', closeMonthDetail);
-document.getElementById('monthBackBtn').addEventListener('click', backToMonths);
+document.getElementById('plansOpenBtn').addEventListener('click', openMonthsPage);
+document.getElementById('monthsPageBackBtn').addEventListener('click', closeMonthsPage);
 document.getElementById('newPlanBtn').addEventListener('click', ()=> openPlanEditor(null));
 document.getElementById('fpBackBtn').addEventListener('click', closePlanEditor);
 
-document.getElementById('monthsGrid').addEventListener('click', (e)=>{
+document.getElementById('monthsGrid').addEventListener('click', async (e)=>{
+  if(e.target.classList.contains('month-card-del')){
+    e.stopPropagation();
+    const month = e.target.getAttribute('data-month');
+    if(state.months.length <= 1){
+      toast('يجب أن يبقى شهر واحد على الأقل');
+      return;
+    }
+    if(!(await confirmAction(`هل تريد حذف شهر "${month}" وكل خططه؟`))) return;
+    const plans = state.dailyPlans[month] || [];
+    moveToTrash('month', month, { month, plans }, {});
+    state.months = state.months.filter(m => m !== month);
+    delete state.dailyPlans[month];
+    if(activeMonth === month){
+      activeMonth = null;
+      monthDetailPanel.style.display = 'none';
+    }
+    renderMonthsGrid();
+    saveState(false);
+    toast('تم نقل الشهر إلى سلة المحذوفات');
+    return;
+  }
   const card = e.target.closest('.month-card');
   if(card) openMonthDetail(card.getAttribute('data-month'));
 });
 
-document.getElementById('fpSaveBtn').addEventListener('click', async ()=>{
-  const cls = document.getElementById('fpClass').value.trim();
-  const date = document.getElementById('fpDate').value;
-  const subject = document.getElementById('fpSubject').value.trim();
-  const title = document.getElementById('fpTitle').value.trim();
-  const goals = document.getElementById('fpGoals').value.trim();
-  const method = document.getElementById('fpMethod').value.trim();
-  const tools = document.getElementById('fpTools').value.trim();
-  const steps = document.getElementById('fpSteps').value.trim();
-  const evalv = document.getElementById('fpEval').value.trim();
-  const homework = document.getElementById('fpHomework').value.trim();
-  const principalSig = isCanvasBlank(principalCanvas) ? '' : principalCanvas.toDataURL('image/png');
-  const supervisorSig = isCanvasBlank(supervisorCanvas) ? '' : supervisorCanvas.toDataURL('image/png');
-
-  if(!title && !goals && !steps){
-    toast("أضف عنوان الدرس على الأقل");
+document.getElementById('addMonthBtn').addEventListener('click', ()=>{
+  const input = document.getElementById('newMonthInput');
+  const name = input.value.trim();
+  if(!name){
+    toast('اكتب اسم الشهر أولاً');
     return;
   }
-  if(!state.dailyPlans[activeMonth]) state.dailyPlans[activeMonth] = [];
+  ensureMonths();
+  if(state.months.includes(name)){
+    toast('هذا الشهر موجود بالفعل');
+    return;
+  }
+  state.months.push(name);
+  input.value = '';
+  renderMonthsGrid();
+  saveState(false);
+  toast('تمت إضافة الشهر ✓');
+});
+document.getElementById('newMonthInput').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter') document.getElementById('addMonthBtn').click();
+});
 
+const PLAN_FIELD_MAP = {
+  fpClass:'cls', fpDate:'date', fpSubject:'subject', fpTitle:'title',
+  fpGoals:'goals', fpMethod:'method', fpTools:'tools', fpSteps:'steps',
+  fpEval:'eval', fpHomework:'homework'
+};
+
+function ensureEditingPlan(){
   if(editingPlanId){
-    const p = state.dailyPlans[activeMonth].find(x=>String(x.id)===String(editingPlanId));
-    if(p){ p.cls=cls; p.date=date; p.subject=subject; p.title=title; p.goals=goals; p.method=method; p.tools=tools; p.steps=steps; p.eval=evalv; p.homework=homework; p.principalSig=principalSig; p.supervisorSig=supervisorSig; }
-  }else{
-    state.dailyPlans[activeMonth].unshift({ id:Date.now(), cls, date, subject, title, goals, method, tools, steps, eval:evalv, homework, principalSig, supervisorSig });
+    const existing = (state.dailyPlans[activeMonth]||[]).find(x=>String(x.id)===String(editingPlanId));
+    if(existing) return existing;
+  }
+  if(!state.dailyPlans[activeMonth]) state.dailyPlans[activeMonth] = [];
+  const p = {
+    id: Date.now()+Math.random(),
+    cls: document.getElementById('fpClass').value,
+    date: document.getElementById('fpDate').value,
+    subject: document.getElementById('fpSubject').value,
+    title: document.getElementById('fpTitle').value,
+    goals: document.getElementById('fpGoals').value,
+    method: document.getElementById('fpMethod').value,
+    tools: document.getElementById('fpTools').value,
+    steps: document.getElementById('fpSteps').value,
+    eval: document.getElementById('fpEval').value,
+    homework: document.getElementById('fpHomework').value,
+    principalSig: '',
+    supervisorSig: ''
+  };
+  state.dailyPlans[activeMonth].unshift(p);
+  editingPlanId = p.id;
+  document.getElementById('fpDeleteBtn').style.display = 'inline-flex';
+  return p;
+}
+
+let planSaveTimer = null;
+function schedulePlanSave(){ clearTimeout(planSaveTimer); planSaveTimer = setTimeout(()=> saveState(false), 500); }
+
+Object.keys(PLAN_FIELD_MAP).forEach(fieldId=>{
+  document.getElementById(fieldId).addEventListener('input', (e)=>{
+    const p = ensureEditingPlan();
+    p[PLAN_FIELD_MAP[fieldId]] = e.target.value;
+    schedulePlanSave();
+  });
+});
+
+document.getElementById('fpSaveBtn').addEventListener('click', async ()=>{
+  const title = document.getElementById('fpTitle').value.trim();
+  const goals = document.getElementById('fpGoals').value.trim();
+  const steps = document.getElementById('fpSteps').value.trim();
+
+  if(!editingPlanId && !title && !goals && !steps){
+    toast("أضف عنوان الدرس على الأقل");
+    return;
   }
   await saveState(false);
   toast("تم حفظ الخطة اليومية ✓");
@@ -1877,6 +2041,7 @@ document.getElementById('fpSaveBtn').addEventListener('click', async ()=>{
 
 document.getElementById('fpDeleteBtn').addEventListener('click', async ()=>{
   if(!editingPlanId) return;
+  if(!(await confirmAction('هل تريد حذف هذه الخطة اليومية؟'))) return;
   const p = (state.dailyPlans[activeMonth]||[]).find(x=>String(x.id)===String(editingPlanId));
   if(p) moveToTrash('plan', p.title || 'خطة يومية بدون عنوان', p, { month: activeMonth });
   state.dailyPlans[activeMonth] = (state.dailyPlans[activeMonth]||[]).filter(x=>String(x.id)!==String(editingPlanId));
@@ -1887,8 +2052,6 @@ document.getElementById('fpDeleteBtn').addEventListener('click', async ()=>{
 
 overlay.addEventListener('click', ()=>{
   closeDrawer();
-  closeMonthsModal();
-  closeMonthDetail();
 });
 
 /* ================== ماستر شيت الدرجات (كل صف دراسي مستقل بطلابه ودرجاته) ================== */
@@ -1990,10 +2153,11 @@ function renderMasterList(){
     });
   });
   list.querySelectorAll('.note-del').forEach(btn=>{
-    btn.addEventListener('click', (e)=>{
+    btn.addEventListener('click', async (e)=>{
       e.stopPropagation();
       const id = btn.getAttribute('data-id');
       const m = state.masterSheets.find(x=>String(x.id)===id);
+      if(!(await confirmAction(`هل تريد حذف "${m ? masterSheetLabel(m) : 'هذا الماستر شيت'}"؟`))) return;
       if(m) moveToTrash('masterSheet', masterSheetLabel(m), m, {});
       state.masterSheets = state.masterSheets.filter(x=>String(x.id)!==id);
       renderMasterList();
@@ -2038,9 +2202,10 @@ function closeMasterSheet(){
   masterListPage.classList.add('show');
 }
 
-document.getElementById('msDeleteBtn').addEventListener('click', ()=>{
+document.getElementById('msDeleteBtn').addEventListener('click', async ()=>{
   const m = currentMasterSheet();
   if(!m) return;
+  if(!(await confirmAction(`هل تريد حذف "${masterSheetLabel(m)}"؟`))) return;
   moveToTrash('masterSheet', masterSheetLabel(m), m, {});
   state.masterSheets = state.masterSheets.filter(x=>String(x.id)!==String(editingMasterSheetId));
   saveState(false);
@@ -2290,12 +2455,13 @@ document.getElementById('msBody').addEventListener('focusout', (e)=>{
   }
 });
 
-document.getElementById('msBody').addEventListener('click', (e)=>{
+document.getElementById('msBody').addEventListener('click', async (e)=>{
   if(e.target.classList.contains('ms-row-del')){
     const id = e.target.getAttribute('data-id');
     const m = currentMasterSheet();
     if(!m) return;
     const st = m.students.find(s => String(s.id) === id);
+    if(!(await confirmAction(`هل تريد حذف الطالب "${st && st.name ? st.name : 'بدون اسم'}"؟`))) return;
     if(st) moveToTrash('student', st.name || 'طالب بدون اسم', st, { sheetId: m.id });
     m.students = m.students.filter(s => String(s.id) !== id);
     renderMasterSheet();
@@ -2377,10 +2543,11 @@ document.getElementById('examQuestions').addEventListener('input', (e)=>{
   scheduleExamSave();
 });
 
-document.getElementById('examQuestions').addEventListener('click', (e)=>{
+document.getElementById('examQuestions').addEventListener('click', async (e)=>{
   if(e.target.classList.contains('exam-q-del')){
     const row = e.target.closest('.exam-q');
     const id = row.getAttribute('data-id');
+    if(!(await confirmAction('هل تريد حذف هذا السؤال؟'))) return;
     const q = state.examPaper.questions.find(x=>String(x.id)===id);
     if(q) moveToTrash('question', (q.text||'').slice(0,40) || 'سؤال بدون نص', q, {});
     state.examPaper.questions = state.examPaper.questions.filter(x=>String(x.id)!==id);
@@ -2463,10 +2630,11 @@ document.getElementById('dailyExamQuestions').addEventListener('input', (e)=>{
   scheduleDailyExamSave();
 });
 
-document.getElementById('dailyExamQuestions').addEventListener('click', (e)=>{
+document.getElementById('dailyExamQuestions').addEventListener('click', async (e)=>{
   if(e.target.classList.contains('exam-q-del')){
     const row = e.target.closest('.exam-q');
     const id = row.getAttribute('data-id');
+    if(!(await confirmAction('هل تريد حذف هذا السؤال؟'))) return;
     const q = state.dailyExamPaper.questions.find(x=>String(x.id)===id);
     if(q) moveToTrash('dailyQuestion', (q.text||'').slice(0,40) || 'سؤال بدون نص', q, {});
     state.dailyExamPaper.questions = state.dailyExamPaper.questions.filter(x=>String(x.id)!==id);
@@ -2551,10 +2719,11 @@ function renderAnnualList(){
     });
   });
   list.querySelectorAll('.note-del').forEach(btn=>{
-    btn.addEventListener('click', (e)=>{
+    btn.addEventListener('click', async (e)=>{
       e.stopPropagation();
       const id = btn.getAttribute('data-id');
       const p = state.annualPlans.find(x=>String(x.id)===id);
+      if(!(await confirmAction(`هل تريد حذف "${p ? annualPlanLabel(p) : 'هذه الخطة'}"؟`))) return;
       if(p) moveToTrash('annualPlan', annualPlanLabel(p), p, {});
       state.annualPlans = state.annualPlans.filter(x=>String(x.id)!==id);
       renderAnnualList();
@@ -2624,9 +2793,10 @@ document.getElementById('annualOpenBtn').addEventListener('click', openAnnualLis
 document.getElementById('annualListBackBtn').addEventListener('click', closeAnnualList);
 document.getElementById('annualBackBtn').addEventListener('click', closeAnnualEditor);
 
-document.getElementById('annualDeleteBtn').addEventListener('click', ()=>{
+document.getElementById('annualDeleteBtn').addEventListener('click', async ()=>{
   const p = currentAnnualPlan();
   if(!p) return;
+  if(!(await confirmAction(`هل تريد حذف "${annualPlanLabel(p)}"؟`))) return;
   moveToTrash('annualPlan', annualPlanLabel(p), p, {});
   state.annualPlans = state.annualPlans.filter(x=>String(x.id)!==String(editingAnnualId));
   saveState(false);
@@ -2672,12 +2842,13 @@ document.getElementById('annualBody').addEventListener('input', (e)=>{
   scheduleAnnualSave();
 });
 
-document.getElementById('annualBody').addEventListener('click', (e)=>{
+document.getElementById('annualBody').addEventListener('click', async (e)=>{
   if(e.target.classList.contains('annual-row-del')){
     const p = currentAnnualPlan();
     if(!p) return;
     const id = e.target.getAttribute('data-id');
     const r = p.rows.find(x=>String(x.id)===id);
+    if(!(await confirmAction(`هل تريد حذف شهر "${r && r.month ? r.month : 'بدون اسم'}"؟`))) return;
     if(r) moveToTrash('annualRow', r.month || 'شهر بدون اسم', r, { planId: editingAnnualId });
     p.rows = p.rows.filter(x=>String(x.id)!==id);
     renderAnnualBody();
@@ -3088,7 +3259,7 @@ loadState();
 
 /* ================== سلة المحذوفات ================== */
 const TRASH_LIFETIME_MS = 30 * 24 * 60 * 60 * 1000; // 30 يوماً
-const TRASH_TYPE_LABELS = { note:'ملاحظة', plan:'خطة يومية', student:'طالب', question:'سؤال امتحان شهري', dailyQuestion:'سؤال امتحان يومي', annualRow:'شهر (خطة سنوية)', annualPlan:'خطة سنوية', period:'حصة دراسية', masterSheet:'ماستر شيت' };
+const TRASH_TYPE_LABELS = { note:'ملاحظة', plan:'خطة يومية', student:'طالب', question:'سؤال امتحان شهري', dailyQuestion:'سؤال امتحان يومي', annualRow:'شهر (خطة سنوية)', annualPlan:'خطة سنوية', period:'حصة دراسية', masterSheet:'ماستر شيت', month:'شهر (خطة يومية)' };
 const trashPage = document.getElementById('trashPage');
 
 function moveToTrash(type, label, payload, extra){
@@ -3159,6 +3330,14 @@ function restoreFromTrash(id){
     ensureMasterSheets();
     state.masterSheets.push(item.payload);
     if(document.getElementById('masterListContainer')) renderMasterList();
+  }else if(item.type === 'month'){
+    ensureMonths();
+    const monthName = item.payload.month;
+    if(!state.months.includes(monthName)) state.months.push(monthName);
+    if(item.payload.plans && item.payload.plans.length){
+      state.dailyPlans[monthName] = item.payload.plans;
+    }
+    if(document.getElementById('monthsGrid')) renderMonthsGrid();
   }else if(item.type === 'question'){
     state.examPaper.questions.push(item.payload);
   }else if(item.type === 'dailyQuestion'){
@@ -3197,11 +3376,14 @@ function deleteForeverFromTrash(id){
   saveState(false);
 }
 
-document.getElementById('trashList').addEventListener('click', (e)=>{
+document.getElementById('trashList').addEventListener('click', async (e)=>{
   const id = e.target.getAttribute('data-id');
   if(!id) return;
   if(e.target.classList.contains('trash-restore-btn')) restoreFromTrash(id);
-  if(e.target.classList.contains('trash-forever-btn')) deleteForeverFromTrash(id);
+  if(e.target.classList.contains('trash-forever-btn')){
+    if(!(await confirmAction('هل تريد حذف هذا العنصر نهائيًا؟ لا يمكن التراجع عن هذا الإجراء.'))) return;
+    deleteForeverFromTrash(id);
+  }
 });
 
 document.getElementById('trashOpenBtn').addEventListener('click', ()=>{

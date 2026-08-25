@@ -243,7 +243,8 @@ header.top::after{
 }
 .schedule-toggle-row{ display:flex; align-items:flex-start; gap:16px; flex-wrap:wrap; margin:34px 0 0; }
 .schedule-toggle-row .ledger-scroll{ flex:1 1 400px; min-width:280px; }
-.head-actions{ display:flex; flex-direction:column; gap:12px; max-width:420px; }
+.head-actions{ display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:12px; width:100%; }
+.head-actions .btn{ justify-content:center; }
 .btn{
   font-family:'Tajawal', sans-serif; font-weight:700; font-size:14px;
   border:none; border-radius:12px; padding:14px 20px; cursor:pointer;
@@ -382,6 +383,7 @@ tr:nth-child(even) .lesson-cell{ background:rgba(124,152,133,0.05); }
 }
 .note-card .n-date{ font-size:10.5px; color:var(--ink-soft); margin-bottom:4px; }
 .note-card .n-text{ font-size:13.5px; line-height:1.6; white-space:pre-wrap; }
+#monthPlansList .n-date{ font-size:13.5px; }
 .note-del{
   position:absolute; top:8px; left:8px; background:none; border:none; color:var(--rule-red);
   font-size:13px; cursor:pointer; opacity:.55;
@@ -410,6 +412,26 @@ tr:nth-child(even) .lesson-cell{ background:rgba(124,152,133,0.05); }
 .confirm-actions .btn{ flex:1; justify-content:center; }
 .confirm-danger-btn{ background:var(--rule-red); color:#fff; }
 .confirm-danger-btn:hover{ filter:brightness(0.92); }
+
+.annual-work-row{ display:flex; align-items:flex-start; gap:20px; flex-wrap:wrap; }
+.annual-work-row .fp-sheet{ flex:2 1 480px; min-width:280px; }
+.handwrite-panel{
+  flex:1 1 320px; min-width:280px; max-width:420px; background:var(--card); border:1px solid var(--paper-line);
+  border-radius:14px; box-shadow:var(--shadow); padding:18px; position:sticky; top:14px;
+}
+.handwrite-panel-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.handwrite-panel-head h3{ font-family:'Markazi Text'; font-size:18px; color:var(--chalkboard); }
+.handwrite-hint{ font-size:12px; color:var(--ink-soft); margin-bottom:10px; line-height:1.6; }
+.handwrite-target{
+  font-size:12.5px; font-weight:700; color:var(--chalkboard); background:rgba(200,155,60,0.12);
+  border-radius:8px; padding:8px 10px; margin-bottom:10px;
+}
+#handwriteCanvas{
+  width:100%; aspect-ratio:960/480; background:#fff; border:1.5px solid var(--paper-line);
+  border-radius:10px; touch-action:none; cursor:crosshair; display:block;
+}
+.handwrite-tools{ display:flex; gap:10px; margin-top:12px; }
+.handwrite-progress{ margin-top:12px; font-size:13px; color:var(--ink-soft); font-weight:700; text-align:center; }
 
 footer.tip{ text-align:center; color:var(--ink-soft); font-size:11.5px; margin-top:36px; }
 
@@ -514,11 +536,11 @@ footer.tip{ text-align:center; color:var(--ink-soft); font-size:11.5px; margin-t
 @media(max-width:480px){ .fp-top-grid{ grid-template-columns:1fr; } }
 .fp-row{ display:flex; flex-direction:column; gap:6px; }
 .fp-row label{ font-size:12.5px; font-weight:700; color:var(--ink-soft); }
-.fp-row input, .fp-row textarea{
+.fp-row input, .fp-row textarea, .fp-row select{
   border:1.5px solid var(--paper-line); border-radius:10px; padding:10px 12px;
   font-family:'Tajawal'; font-size:14px; outline:none; background:var(--paper); color:var(--ink);
 }
-.fp-row input:focus, .fp-row textarea:focus{ border-color:var(--mustard); background:var(--card); }
+.fp-row input:focus, .fp-row textarea:focus, .fp-row select:focus{ border-color:var(--mustard); background:var(--card); }
 .fp-row textarea{ min-height:90px; resize:vertical; }
 .fp-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:6px; }
 .fp-del{ background:var(--rule-red); color:#fff; }
@@ -707,6 +729,7 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
 .books-viewer-toolbar{ display:flex; align-items:center; gap:12px; padding-bottom:8px; flex-wrap:wrap; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
 <script type="module">
   import * as pdfjsLib from 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.3.136/build/pdf.mjs';
   window.pdfjsLib = pdfjsLib;
@@ -863,12 +886,14 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
   <div class="fp-header">
     <button class="fp-back" id="fpBackBtn">→ رجوع</button>
     <h2 id="fpMonthLabel">خطة يومية</h2>
-    <label class="fp-back fp-color-label" title="لون الخط" style="margin-right:auto;">🎨<input type="color" id="planColorInput" value="#2B2B2B"></label>
+    <button class="fp-back" id="planHandwriteBtn" style="margin-right:auto;">✍️ كتابة بخط اليد</button>
+    <label class="fp-back fp-color-label" title="لون الخط">🎨<input type="color" id="planColorInput" value="#2B2B2B"></label>
     <button class="fp-back fp-font-btn font-dec" id="planFontDecBtn" title="تصغير الخط">A</button>
     <button class="fp-back fp-font-btn font-inc" id="planFontIncBtn" title="تكبير الخط">A</button>
     <button class="fp-back" id="fpPrintBtn">🖨️ طباعة</button>
   </div>
   <div class="fp-body">
+    <div class="annual-work-row">
     <div class="fp-sheet" id="planPrintArea">
       <div class="fp-top-grid">
         <div class="fp-row">
@@ -878,6 +903,17 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
         <div class="fp-row">
           <label>التاريخ</label>
           <input type="date" id="fpDate">
+        </div>
+        <div class="fp-row">
+          <label>اليوم</label>
+          <select id="fpDay">
+            <option value="">—</option>
+            <option value="الأحد">الأحد</option>
+            <option value="الاثنين">الاثنين</option>
+            <option value="الثلاثاء">الثلاثاء</option>
+            <option value="الأربعاء">الأربعاء</option>
+            <option value="الخميس">الخميس</option>
+          </select>
         </div>
         <div class="fp-row">
           <label>المادة</label>
@@ -940,6 +976,22 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
         <button class="btn fp-del" id="fpDeleteBtn" style="display:none;">🗑️ حذف</button>
         <button class="btn btn-solid" id="fpSaveBtn">✓ حفظ الخطة</button>
       </div>
+    </div>
+
+    <div class="handwrite-panel" id="handwritePanel2" style="display:none;">
+      <div class="handwrite-panel-head">
+        <h3>✍️ الكتابة بخط اليد</h3>
+        <button class="drawer-close" id="handwriteCloseBtn2">✕</button>
+      </div>
+      <p class="handwrite-hint">اضغط داخل أي حقل بالخطة لتحديده كوجهة، ثم اكتب هنا واضغط "تحويل وإدراج" ليُدرج النص في ذلك الحقل مباشرة. للحصول على أفضل دقة، اكتب حروفًا منفصلة وواضحة (قريبة من الخط المطبوع) بدل الخط المتصل السريع.</p>
+      <div class="handwrite-target">الحقل المحدد: <strong id="handwriteTargetLabel2">لم يُحدَّد بعد</strong></div>
+      <canvas id="handwriteCanvas2" width="960" height="480"></canvas>
+      <div class="handwrite-tools">
+        <button class="btn btn-outline" id="handwriteClearBtn2">🗑️ مسح</button>
+        <button class="btn btn-solid" id="handwriteConvertBtn2">🔄 تحويل وإدراج</button>
+      </div>
+      <div id="handwriteProgress2" class="handwrite-progress" style="display:none;">جارٍ التعرّف على الخط... <span id="handwriteProgressPct2">0%</span></div>
+    </div>
     </div>
   </div>
 </div>
@@ -1052,12 +1104,14 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
     <button class="fp-back" id="annualBackBtn">→ رجوع</button>
     <h2>الخطة السنوية</h2>
     <button class="fp-back" id="annualDeleteBtn" title="حذف هذه الخطة">🗑️</button>
-    <label class="fp-back fp-color-label" title="لون الخط" style="margin-right:auto;">🎨<input type="color" id="annualColorInput" value="#2B2B2B"></label>
+    <button class="fp-back" id="annualHandwriteBtn" style="margin-right:auto;">✍️ كتابة بخط اليد</button>
+    <label class="fp-back fp-color-label" title="لون الخط">🎨<input type="color" id="annualColorInput" value="#2B2B2B"></label>
     <button class="fp-back fp-font-btn font-dec" id="annualFontDecBtn" title="تصغير الخط">A</button>
     <button class="fp-back fp-font-btn font-inc" id="annualFontIncBtn" title="تكبير الخط">A</button>
     <button class="fp-back" id="annualPrintBtn">🖨️ طباعة</button>
   </div>
   <div class="fp-body">
+    <div class="annual-work-row">
     <div class="fp-sheet" id="annualPrintArea">
       <div class="fp-top-grid">
         <div class="fp-row">
@@ -1110,6 +1164,22 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
           </div>
         </div>
       </div>
+    </div>
+
+    <div class="handwrite-panel" id="handwritePanel" style="display:none;">
+      <div class="handwrite-panel-head">
+        <h3>✍️ الكتابة بخط اليد</h3>
+        <button class="drawer-close" id="handwriteCloseBtn">✕</button>
+      </div>
+      <p class="handwrite-hint">اضغط داخل أي حقل بالخطة لتحديده كوجهة، ثم اكتب هنا واضغط "تحويل وإدراج" ليُدرج النص في ذلك الحقل مباشرة. للحصول على أفضل دقة، اكتب حروفًا منفصلة وواضحة (قريبة من الخط المطبوع) بدل الخط المتصل السريع.</p>
+      <div class="handwrite-target">الحقل المحدد: <strong id="handwriteTargetLabel">لم يُحدَّد بعد</strong></div>
+      <canvas id="handwriteCanvas" width="960" height="480"></canvas>
+      <div class="handwrite-tools">
+        <button class="btn btn-outline" id="handwriteClearBtn">🗑️ مسح</button>
+        <button class="btn btn-solid" id="handwriteConvertBtn">🔄 تحويل وإدراج</button>
+      </div>
+      <div id="handwriteProgress" class="handwrite-progress" style="display:none;">جارٍ التعرّف على الخط... <span id="handwriteProgressPct">0%</span></div>
+    </div>
     </div>
   </div>
 </div>
@@ -1327,6 +1397,184 @@ function confirmAction(message){
     overlay.addEventListener('click', onOverlay);
   });
 }
+
+/* ================== الكتابة بخط اليد وتحويلها إلى نص (OCR) ================== */
+let sharedHandwriteWorker = null;
+
+function getInkBoundingBox(canvas){
+  const ctx = canvas.getContext('2d');
+  const { width, height } = canvas;
+  const imgData = ctx.getImageData(0, 0, width, height).data;
+  let minX = width, minY = height, maxX = 0, maxY = 0, found = false;
+  for(let y = 0; y < height; y += 2){
+    for(let x = 0; x < width; x += 2){
+      const idx = (y * width + x) * 4;
+      if(imgData[idx] < 200 || imgData[idx+1] < 200 || imgData[idx+2] < 200){
+        found = true;
+        if(x < minX) minX = x;
+        if(x > maxX) maxX = x;
+        if(y < minY) minY = y;
+        if(y > maxY) maxY = y;
+      }
+    }
+  }
+  return found ? { minX, minY, maxX, maxY } : null;
+}
+
+function getCroppedCanvasForOcr(canvas){
+  const box = getInkBoundingBox(canvas);
+  if(!box) return canvas;
+  const pad = 24;
+  const x = Math.max(0, box.minX - pad);
+  const y = Math.max(0, box.minY - pad);
+  const w = Math.min(canvas.width, box.maxX + pad) - x;
+  const h = Math.min(canvas.height, box.maxY + pad) - y;
+  const out = document.createElement('canvas');
+  out.width = w; out.height = h;
+  const octx = out.getContext('2d');
+  octx.fillStyle = '#ffffff';
+  octx.fillRect(0, 0, w, h);
+  octx.drawImage(canvas, x, y, w, h, 0, 0, w, h);
+  return out;
+}
+
+function setupHandwriteCanvas(canvas){
+  const ctx = canvas.getContext('2d');
+  fillWhite(canvas);
+  let drawing = false, last = null;
+  function pos(e){
+    const rect = canvas.getBoundingClientRect();
+    const cx = e.touches ? e.touches[0].clientX : e.clientX;
+    const cy = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x:(cx-rect.left) * (canvas.width/rect.width), y:(cy-rect.top) * (canvas.height/rect.height) };
+  }
+  function start(e){ drawing = true; last = pos(e); e.preventDefault(); }
+  function move(e){
+    if(!drawing) return;
+    const p = pos(e);
+    ctx.strokeStyle = '#000000'; ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke();
+    last = p; e.preventDefault();
+  }
+  function end(){ drawing = false; last = null; }
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', end);
+  canvas.addEventListener('touchstart', start, {passive:false});
+  canvas.addEventListener('touchmove', move, {passive:false});
+  canvas.addEventListener('touchend', end);
+}
+
+async function getHandwriteWorker(onProgress){
+  if(sharedHandwriteWorker) return sharedHandwriteWorker;
+  // نموذج مدمج عربي + إنجليزي دفعة واحدة، بدون الحاجة لاختيار اللغة يدويًا
+  const worker = await Tesseract.createWorker('ara+eng', 1, {
+    logger: info => {
+      if(info.status === 'recognizing text') onProgress(Math.round((info.progress||0) * 100));
+    }
+  });
+  // "كتلة نصية موحّدة" تدعم الأسطر المتعددة (مناسبة للحقول القصيرة والفقرات الطويلة معًا)
+  await worker.setParameters({ tessedit_pageseg_mode: '6' });
+  sharedHandwriteWorker = worker;
+  return worker;
+}
+
+function setupHandwriteWidget(cfg){
+  const panel = document.getElementById(cfg.panelId);
+  const canvas = document.getElementById(cfg.canvasId);
+  const targetLabel = document.getElementById(cfg.targetLabelId);
+  const progress = document.getElementById(cfg.progressId);
+  const pct = document.getElementById(cfg.pctId);
+  let targetInput = null;
+
+  setupHandwriteCanvas(canvas);
+
+  document.getElementById(cfg.scopeId).addEventListener('focusin', (e)=>{
+    if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA'){
+      targetInput = e.target;
+      targetLabel.textContent = cfg.describeTarget(e.target);
+    }
+  });
+
+  function open(){
+    fillWhite(canvas);
+    progress.style.display = 'none';
+    panel.style.display = 'block';
+  }
+  function close(){
+    panel.style.display = 'none';
+  }
+
+  document.getElementById(cfg.openBtnId).addEventListener('click', open);
+  document.getElementById(cfg.closeBtnId).addEventListener('click', close);
+  document.getElementById(cfg.clearBtnId).addEventListener('click', ()=> fillWhite(canvas));
+
+  document.getElementById(cfg.convertBtnId).addEventListener('click', async ()=>{
+    if(!targetInput){
+      toast('اضغط داخل حقل بالخطة أولاً لتحديده');
+      return;
+    }
+    if(typeof Tesseract === 'undefined'){
+      toast('تعذّر تحميل مكتبة التعرّف على الخط — تحقق من الاتصال بالإنترنت');
+      return;
+    }
+    if(isCanvasBlank(canvas)){
+      toast('اكتب شيئًا أولاً');
+      return;
+    }
+    progress.style.display = 'block';
+    pct.textContent = '0%';
+    try{
+      const worker = await getHandwriteWorker(p => { pct.textContent = p + '%'; });
+      const ocrInput = getCroppedCanvasForOcr(canvas);
+      const { data } = await worker.recognize(ocrInput);
+      const text = (data.text || '').trim();
+      if(!text){
+        toast('لم يتم التعرّف على أي نص — حاول الكتابة بخط أوضح');
+      }else{
+        const start = targetInput.selectionStart != null ? targetInput.selectionStart : targetInput.value.length;
+        const end = targetInput.selectionEnd != null ? targetInput.selectionEnd : targetInput.value.length;
+        targetInput.value = targetInput.value.slice(0, start) + text + targetInput.value.slice(end);
+        targetInput.dispatchEvent(new Event('input', { bubbles: true }));
+        fillWhite(canvas);
+        toast('تم إدراج النص في الحقل — راجعه وصحّح إن لزم ✓');
+      }
+    }catch(err){
+      toast('تعذّر التعرّف على الخط — حاول الكتابة بخط أوضح');
+    }finally{
+      progress.style.display = 'none';
+    }
+  });
+}
+
+setupHandwriteWidget({
+  panelId:'handwritePanel', canvasId:'handwriteCanvas', targetLabelId:'handwriteTargetLabel',
+  progressId:'handwriteProgress', pctId:'handwriteProgressPct', scopeId:'annualPrintArea',
+  openBtnId:'annualHandwriteBtn', closeBtnId:'handwriteCloseBtn', clearBtnId:'handwriteClearBtn', convertBtnId:'handwriteConvertBtn',
+  describeTarget: (el)=>{
+    if(el.id === 'annualSubject') return 'المادة';
+    if(el.id === 'annualGrade') return 'الصف';
+    if(el.id === 'annualYear') return 'العام الدراسي';
+    if(el.classList.contains('an-month-input')) return 'اسم الشهر';
+    if(el.classList.contains('an-content-input')) return 'محتوى الشهر';
+    if(el.classList.contains('an-pages-input')) return 'الصفحات';
+    return el.placeholder || 'حقل';
+  }
+});
+
+setupHandwriteWidget({
+  panelId:'handwritePanel2', canvasId:'handwriteCanvas2', targetLabelId:'handwriteTargetLabel2',
+  progressId:'handwriteProgress2', pctId:'handwriteProgressPct2', scopeId:'planPrintArea',
+  openBtnId:'planHandwriteBtn', closeBtnId:'handwriteCloseBtn2', clearBtnId:'handwriteClearBtn2', convertBtnId:'handwriteConvertBtn2',
+  describeTarget: (el)=>{
+    const labels = {
+      fpClass:'الصف', fpDate:'التاريخ', fpSubject:'المادة', fpTitle:'الموضوع',
+      fpGoals:'الأهداف السلوكية', fpMethod:'الطريقة التدريسية', fpTools:'الوسائل التعليمية',
+      fpSteps:'خطوات الدرس', fpEval:'التقويم', fpHomework:'الواجب البيتي'
+    };
+    return labels[el.id] || el.placeholder || 'حقل';
+  }
+});
 
 async function loadState(){
   try{
@@ -1765,7 +2013,7 @@ function renderMonthPlans(){
   list.innerHTML = plans.map(p => `
     <div class="note-card" data-id="${p.id}" style="cursor:pointer;">
       <button class="note-del" data-id="${p.id}" title="حذف">✕</button>
-      <div class="n-date">${[p.cls, p.date, p.subject].filter(Boolean).join(' • ')}</div>
+      <div class="n-date">${[p.cls, p.day, formatDateDMY(p.date), p.subject].filter(Boolean).join(' • ')}</div>
       <div class="n-text" style="font-weight:700; color:var(--chalkboard);"></div>
     </div>
   `).join('');
@@ -1879,6 +2127,7 @@ function openPlanEditor(planId){
     const p = (state.dailyPlans[activeMonth]||[]).find(x=>String(x.id)===String(editingPlanId));
     document.getElementById('fpClass').value = p ? (p.cls||'') : '';
     document.getElementById('fpDate').value = p ? (p.date||'') : '';
+    document.getElementById('fpDay').value = p ? (p.day||'') : '';
     document.getElementById('fpSubject').value = p ? (p.subject||'') : '';
     document.getElementById('fpTitle').value = p ? (p.title||'') : '';
     document.getElementById('fpGoals').value = p ? (p.goals||'') : '';
@@ -1893,6 +2142,7 @@ function openPlanEditor(planId){
   }else{
     document.getElementById('fpClass').value = '';
     document.getElementById('fpDate').value = new Date().toISOString().slice(0,10);
+    document.getElementById('fpDay').value = DAYS[new Date().getDay()] || '';
     document.getElementById('fpSubject').value = state.info.subject || '';
     document.getElementById('fpTitle').value = '';
     document.getElementById('fpGoals').value = '';
@@ -1982,7 +2232,7 @@ document.getElementById('newMonthInput').addEventListener('keydown', (e)=>{
 });
 
 const PLAN_FIELD_MAP = {
-  fpClass:'cls', fpDate:'date', fpSubject:'subject', fpTitle:'title',
+  fpClass:'cls', fpDate:'date', fpDay:'day', fpSubject:'subject', fpTitle:'title',
   fpGoals:'goals', fpMethod:'method', fpTools:'tools', fpSteps:'steps',
   fpEval:'eval', fpHomework:'homework'
 };
@@ -1997,6 +2247,7 @@ function ensureEditingPlan(){
     id: Date.now()+Math.random(),
     cls: document.getElementById('fpClass').value,
     date: document.getElementById('fpDate').value,
+    day: document.getElementById('fpDay').value,
     subject: document.getElementById('fpSubject').value,
     title: document.getElementById('fpTitle').value,
     goals: document.getElementById('fpGoals').value,
@@ -2024,6 +2275,18 @@ Object.keys(PLAN_FIELD_MAP).forEach(fieldId=>{
     schedulePlanSave();
   });
 });
+
+function autoFillDayFromDate(e){
+  if(!e.target.value) return;
+  const d = new Date(e.target.value + 'T00:00:00');
+  if(isNaN(d.getTime())) return;
+  const suggestedDay = DAYS[d.getDay()] || '';
+  const dayEl = document.getElementById('fpDay');
+  dayEl.value = suggestedDay;
+  dayEl.dispatchEvent(new Event('input', { bubbles: true }));
+}
+document.getElementById('fpDate').addEventListener('input', autoFillDayFromDate);
+document.getElementById('fpDate').addEventListener('change', autoFillDayFromDate);
 
 document.getElementById('fpSaveBtn').addEventListener('click', async ()=>{
   const title = document.getElementById('fpTitle').value.trim();
@@ -2904,6 +3167,14 @@ function esc(s){
   return d.innerHTML;
 }
 
+function formatDateDMY(iso){
+  if(!iso) return '';
+  const parts = iso.split('-');
+  if(parts.length !== 3) return iso;
+  const [y, m, d] = parts;
+  return `${d}/${m}/${y}`;
+}
+
 function printSchedule(){
   let rows = '';
   state.periods.forEach((p, r)=>{
@@ -3026,6 +3297,7 @@ function printDailyExamPaper(){
 function printCurrentPlan(){
   const cls = document.getElementById('fpClass').value;
   const date = document.getElementById('fpDate').value;
+  const day = document.getElementById('fpDay').value;
   const subject = document.getElementById('fpSubject').value;
   const title = document.getElementById('fpTitle').value;
   const goals = document.getElementById('fpGoals').value;
@@ -3041,7 +3313,8 @@ function printCurrentPlan(){
     <h2>${esc(title) || 'خطة يومية'}</h2>
     <div class="p-meta">
       <span>الصف:</span> ${esc(cls)} &nbsp; | &nbsp;
-      <span>التاريخ:</span> ${esc(date)} &nbsp; | &nbsp;
+      <span>اليوم:</span> ${esc(day)} &nbsp; | &nbsp;
+      <span>التاريخ:</span> ${esc(formatDateDMY(date))} &nbsp; | &nbsp;
       <span>المادة:</span> ${esc(subject)}
     </div>
     <div class="p-block"><label>الأهداف السلوكية</label><div>${esc(goals)}</div></div>
@@ -3175,10 +3448,10 @@ document.getElementById('backupExcelBtn').addEventListener('click', ()=>{
     }
 
     // ---- الخطط اليومية ----
-    const plansAOA = [["الشهر","الصف","التاريخ","المادة","عنوان الدرس","الأهداف","طريقة التدريس","الوسائل","خطوات الدرس","التقويم","الواجب"]];
+    const plansAOA = [["الشهر","الصف","اليوم","التاريخ","المادة","عنوان الدرس","الأهداف","طريقة التدريس","الوسائل","خطوات الدرس","التقويم","الواجب"]];
     Object.keys(state.dailyPlans||{}).sort().forEach(month=>{
       (state.dailyPlans[month]||[]).forEach(p=>{
-        plansAOA.push([month, p.cls||'', p.date||'', p.subject||'', p.title||'', p.goals||'', p.method||'', p.tools||'', p.steps||'', p.eval||'', p.homework||'']);
+        plansAOA.push([month, p.cls||'', p.day||'', formatDateDMY(p.date)||'', p.subject||'', p.title||'', p.goals||'', p.method||'', p.tools||'', p.steps||'', p.eval||'', p.homework||'']);
       });
     });
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(plansAOA), sanitizeSheetName('الخطط اليومية'));

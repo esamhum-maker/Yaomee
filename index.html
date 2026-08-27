@@ -990,11 +990,11 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
       </div>
       <p class="handwrite-hint">اضغط داخل أي حقل بالخطة لتحديده كوجهة، ثم اكتب هنا واضغط "تحويل وإدراج" ليُدرج النص في ذلك الحقل مباشرة. للحصول على أفضل دقة، اكتب حروفًا منفصلة وواضحة (قريبة من الخط المطبوع) بدل الخط المتصل السريع.</p>
       <div class="handwrite-target">الحقل المحدد: <strong id="handwriteTargetLabel2">لم يُحدَّد بعد</strong></div>
-      <canvas id="handwriteCanvas2" width="960" height="480"></canvas>
       <div class="handwrite-tools">
         <button class="btn btn-outline" id="handwriteClearBtn2">🗑️ مسح</button>
         <button class="btn btn-solid" id="handwriteConvertBtn2">🔄 تحويل وإدراج</button>
       </div>
+      <canvas id="handwriteCanvas2" width="960" height="480"></canvas>
       <div id="handwriteProgress2" class="handwrite-progress" style="display:none;">جارٍ التعرّف على الخط... <span id="handwriteProgressPct2">0%</span></div>
     </div>
     </div>
@@ -1178,11 +1178,11 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
       </div>
       <p class="handwrite-hint">اضغط داخل أي حقل بالخطة لتحديده كوجهة، ثم اكتب هنا واضغط "تحويل وإدراج" ليُدرج النص في ذلك الحقل مباشرة. للحصول على أفضل دقة، اكتب حروفًا منفصلة وواضحة (قريبة من الخط المطبوع) بدل الخط المتصل السريع.</p>
       <div class="handwrite-target">الحقل المحدد: <strong id="handwriteTargetLabel">لم يُحدَّد بعد</strong></div>
-      <canvas id="handwriteCanvas" width="960" height="480"></canvas>
       <div class="handwrite-tools">
         <button class="btn btn-outline" id="handwriteClearBtn">🗑️ مسح</button>
         <button class="btn btn-solid" id="handwriteConvertBtn">🔄 تحويل وإدراج</button>
       </div>
+      <canvas id="handwriteCanvas" width="960" height="480"></canvas>
       <div id="handwriteProgress" class="handwrite-progress" style="display:none;">جارٍ التعرّف على الخط... <span id="handwriteProgressPct">0%</span></div>
     </div>
     </div>
@@ -1470,7 +1470,23 @@ function getCroppedCanvasForOcr(canvas){
   octx.fillStyle = '#ffffff';
   octx.fillRect(0, 0, w, h);
   octx.drawImage(canvas, x, y, w, h, 0, 0, w, h);
+  binarizeCanvas(out);
   return out;
+}
+
+function binarizeCanvas(canvas){
+  // تحويل كل بكسل إلى أسود خالص أو أبيض خالص (بدل التدرجات الرمادية الناتجة عن الرسم)
+  // هذا يعطي حدودًا أوضح للحروف ويحسّن دقة محرك التعرف بشكل ملحوظ
+  const ctx = canvas.getContext('2d');
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const d = imgData.data;
+  const threshold = 170;
+  for(let i = 0; i < d.length; i += 4){
+    const gray = (d[i] * 0.3 + d[i+1] * 0.59 + d[i+2] * 0.11);
+    const v = gray < threshold ? 0 : 255;
+    d[i] = d[i+1] = d[i+2] = v;
+  }
+  ctx.putImageData(imgData, 0, 0);
 }
 
 function setupHandwriteCanvas(canvas){
@@ -1502,8 +1518,8 @@ function setupHandwriteCanvas(canvas){
 
 async function getHandwriteWorker(onProgress){
   if(sharedHandwriteWorker) return sharedHandwriteWorker;
-  // نموذج مدمج عربي + إنجليزي دفعة واحدة، بدون الحاجة لاختيار اللغة يدويًا
-  const worker = await Tesseract.createWorker('ara+eng', 1, {
+  // العربية فقط: دمج الإنجليزية كان يُدخل أحيانًا حروفًا إنجليزية خاطئة على حساب دقة العربية
+  const worker = await Tesseract.createWorker('ara', 1, {
     logger: info => {
       if(info.status === 'recognizing text') onProgress(Math.round((info.progress||0) * 100));
     }

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daily-plan-v47';
+const CACHE_NAME = 'daily-plan-v50';
 const ASSETS = [
   './index.html',
   './manifest.json',

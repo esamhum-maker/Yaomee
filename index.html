@@ -241,8 +241,6 @@ header.top::after{
 .section-head h2::before{
   content:""; width:8px; height:8px; background:var(--rule-red); border-radius:2px; display:inline-block;
 }
-.schedule-toggle-row{ display:flex; align-items:flex-start; gap:16px; flex-wrap:wrap; margin:34px 0 0; }
-.schedule-toggle-row .ledger-scroll{ flex:1 1 400px; min-width:280px; }
 .head-actions{ display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:12px; width:100%; }
 .head-actions .btn{ justify-content:center; }
 .btn{
@@ -266,9 +264,16 @@ header.top::after{
 
 /* ===== Schedule ledger: three-dimensional & colorful ===== */
 .ledger-scroll{
-  overflow-x:auto; border-radius:16px; border:1px solid var(--paper-line);
+  border-radius:16px; border:1px solid var(--paper-line);
   box-shadow: 0 6px 0 rgba(0,0,0,0.16), 0 12px 22px rgba(0,0,0,0.16);
+  margin-top:14px; padding:10px 10px 0;
 }
+.ledger-table-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.ledger-scroll-hint{
+  display:none; text-align:center; font-size:12px; font-weight:700; color:var(--rule-red);
+  background:rgba(166,61,64,0.08); border-radius:8px; padding:7px; margin-bottom:8px;
+}
+@media(max-width:700px){ .ledger-scroll-hint{ display:block; } }
 .ledger-toolbar{ display:flex; justify-content:flex-end; gap:10px; padding:8px 0; }
 .icon-btn{ padding:10px 14px; font-size:17px; }
 .font-size-btn{ padding:8px 13px; font-family:'Tajawal', sans-serif; font-weight:800; line-height:1; }
@@ -280,7 +285,7 @@ header.top::after{
   cursor:pointer; vertical-align:middle; background:none;
 }
 .text-toolbar{ display:flex; gap:8px; flex-wrap:wrap; }
-.ledger-bottom-actions{ display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; }
+.ledger-bottom-actions{ display:flex; gap:10px; margin-top:12px; margin-bottom:10px; flex-wrap:wrap; }
 .period-del-cell{ width:36px; text-align:center; padding:0; }
 .period-row-del{
   background:none; border:none; color:var(--rule-red); cursor:pointer; font-size:13px; opacity:.6; padding:4px 6px;
@@ -790,37 +795,10 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
     </div>
   </div>
 
-  <div class="schedule-toggle-row">
-    <button class="btn btn-solid" id="scheduleToggleBtn">👁️ إظهار الجدول</button>
-
-    <div class="ledger-scroll" id="ledgerScroll" style="display:none;">
-      <div class="ledger-toolbar">
-        <label class="btn btn-outline color-swatch-label" title="لون خط الجدول">
-          🎨
-          <input type="color" id="scheduleColorInput" value="#24423B">
-        </label>
-        <button class="btn btn-outline font-size-btn font-dec" id="scheduleFontDecBtn" title="تصغير حجم الخط">A</button>
-        <button class="btn btn-outline font-size-btn font-inc" id="scheduleFontSizeBtn" title="تكبير حجم الخط">A</button>
-        <button class="btn btn-outline" id="schedulePrintBtn">🖨️ طباعة الجدول</button>
-      </div>
-      <table class="ledger" id="scheduleTable">
-        <thead>
-          <tr id="dayHeaderRow">
-            <th>الحصة</th>
-          </tr>
-        </thead>
-        <tbody id="scheduleBody"></tbody>
-      </table>
-      <div class="ledger-bottom-actions">
-        <button class="btn btn-outline" id="addPeriodBtn">＋ إضافة حصة</button>
-        <button class="btn btn-outline" id="scheduleEditBtn">✎ تعديل الجدول</button>
-      </div>
-    </div>
-  </div>
-
   <div class="section-head">
     <div class="head-actions">
       <button class="btn btn-outline" id="annualOpenBtn">📅 الخطة السنوية</button>
+      <button class="btn btn-solid" id="scheduleToggleBtn">👁️ إظهار الجدول</button>
       <button class="btn btn-outline" id="plansOpenBtn">📘 الخطة اليومية</button>
       <button class="btn btn-outline" id="masterOpenBtn">🗂️ ماستر شيت الدرجات</button>
       <button class="btn btn-outline" id="dailyExamOpenBtn">📝 أسئلة الامتحانات اليومية</button>
@@ -833,6 +811,33 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
       <button class="btn btn-outline" id="trashOpenBtn">🗑️ سلة المحذوفات</button>
       <button class="btn btn-outline" id="booksOpenBtn">📚 الكتب المنهجية</button>
       <button class="btn btn-outline" id="backupExcelBtn">📊 نسخة إكسل</button>
+    </div>
+  </div>
+
+  <div class="ledger-scroll" id="ledgerScroll" style="display:none;">
+    <div class="ledger-toolbar">
+      <label class="btn btn-outline color-swatch-label" title="لون خط الجدول">
+        🎨
+        <input type="color" id="scheduleColorInput" value="#24423B">
+      </label>
+      <button class="btn btn-outline font-size-btn font-dec" id="scheduleFontDecBtn" title="تصغير حجم الخط">A</button>
+      <button class="btn btn-outline font-size-btn font-inc" id="scheduleFontSizeBtn" title="تكبير حجم الخط">A</button>
+      <button class="btn btn-outline" id="schedulePrintBtn">🖨️ طباعة الجدول</button>
+    </div>
+    <div class="ledger-scroll-hint" id="ledgerScrollHint">👉 مرر الجدول بإصبعك يمينًا ويسارًا لرؤية كل الأيام</div>
+    <div class="ledger-table-wrap">
+    <table class="ledger" id="scheduleTable">
+      <thead>
+        <tr id="dayHeaderRow">
+          <th>الحصة</th>
+        </tr>
+      </thead>
+      <tbody id="scheduleBody"></tbody>
+    </table>
+    </div>
+    <div class="ledger-bottom-actions">
+      <button class="btn btn-outline" id="addPeriodBtn">＋ إضافة حصة</button>
+      <button class="btn btn-outline" id="scheduleEditBtn">✎ تعديل الجدول</button>
     </div>
   </div>
 
@@ -1185,10 +1190,24 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
 </div>
 
 <!-- صفحة كاملة لأسئلة الامتحان الشهري -->
+<!-- قائمة أسئلة الامتحان الشهري -->
+<div class="full-page" id="examListPage">
+  <div class="fp-header">
+    <button class="fp-back" id="examListBackBtn">→ رجوع</button>
+    <h2>أسئلة الامتحانات الشهرية</h2>
+  </div>
+  <div class="fp-body">
+    <button class="btn btn-solid annual-add-row" id="examNewBtn">＋ إضافة امتحان جديد</button>
+    <div id="examListContainer" class="notes-list" style="margin-top:14px;"></div>
+    <div id="examListEmpty" class="trash-empty" style="display:none;">لا توجد امتحانات شهرية بعد — أضف أول امتحان من الأعلى.</div>
+  </div>
+</div>
+
 <div class="full-page" id="examPage">
   <div class="fp-header">
     <button class="fp-back" id="examBackBtn">→ رجوع</button>
     <h2>أسئلة الامتحان الشهري</h2>
+    <button class="fp-back" id="examDeleteBtn" title="حذف هذا الامتحان">🗑️</button>
     <label class="fp-back fp-color-label" title="لون الخط" style="margin-right:auto;">🎨<input type="color" id="monthlyExamColorInput" value="#2B2B2B"></label>
     <button class="fp-back fp-font-btn font-dec" id="monthlyExamFontDecBtn" title="تصغير الخط">A</button>
     <button class="fp-back fp-font-btn font-inc" id="monthlyExamFontIncBtn" title="تكبير الخط">A</button>
@@ -1226,10 +1245,24 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
   </div>
 </div>
 
+<!-- قائمة أسئلة الامتحان اليومي -->
+<div class="full-page" id="dailyExamListPage">
+  <div class="fp-header">
+    <button class="fp-back" id="dailyExamListBackBtn">→ رجوع</button>
+    <h2>أسئلة الامتحانات اليومية</h2>
+  </div>
+  <div class="fp-body">
+    <button class="btn btn-solid annual-add-row" id="dailyExamNewBtn">＋ إضافة امتحان جديد</button>
+    <div id="dailyExamListContainer" class="notes-list" style="margin-top:14px;"></div>
+    <div id="dailyExamListEmpty" class="trash-empty" style="display:none;">لا توجد امتحانات يومية بعد — أضف أول امتحان من الأعلى.</div>
+  </div>
+</div>
+
 <div class="full-page" id="dailyExamPage">
   <div class="fp-header">
     <button class="fp-back" id="dailyExamBackBtn">→ رجوع</button>
     <h2>أسئلة الامتحان اليومي</h2>
+    <button class="fp-back" id="dailyExamDeleteBtn" title="حذف هذا الامتحان">🗑️</button>
     <label class="fp-back fp-color-label" title="لون الخط" style="margin-right:auto;">🎨<input type="color" id="dailyExamColorInput" value="#2B2B2B"></label>
     <button class="fp-back fp-font-btn font-dec" id="dailyExamFontDecBtn" title="تصغير الخط">A</button>
     <button class="fp-back fp-font-btn font-inc" id="dailyExamFontIncBtn" title="تكبير الخط">A</button>
@@ -1358,7 +1391,9 @@ let state = {
   masterSheet: { year:'', grade:'', students: [] },
   masterSheets: [],
   examPaper: { subject:'', grade:'', date:'', time:'', title:'', questions:[] },
+  examPapers: [],
   dailyExamPaper: { subject:'', grade:'', date:'', time:'', title:'', questions:[] },
+  dailyExamPapers: [],
   annualPlan: { subject:'', grade:'', year:'', rows: [] },
   annualPlans: [],
   trash: []
@@ -1596,6 +1631,8 @@ async function loadState(){
   ensureAnnualPlans();
   ensureMasterSheets();
   ensureMonths();
+  ensureExamPapers();
+  ensureDailyExamPapers();
   applyTheme(state.theme || 'default');
   applyScheduleColor(state.scheduleTextColor || '');
   applyScheduleFontScale(state.scheduleFontScale || 1);
@@ -2732,33 +2769,127 @@ document.getElementById('msBody').addEventListener('click', async (e)=>{
   }
 });
 
-/* ================== أسئلة الامتحان الشهري ================== */
+/* ================== أسئلة الامتحان الشهري (قائمة امتحانات مستقلة) ================== */
+const examListPage = document.getElementById('examListPage');
 const examPage = document.getElementById('examPage');
+let editingExamId = null;
 
-function ensureExamPaper(){
-  if(!state.examPaper){
-    state.examPaper = { subject:'', grade:'', date:'', time:'', title:'', questions:[] };
-  }
-  if(!state.examPaper.questions) state.examPaper.questions = [];
+function blankExamDoc(){
+  return { id: Date.now()+Math.random(), subject:'', grade:'', date:'', time:'', title:'', questions:[], createdAt: Date.now() };
 }
 
-function openExamPage(){
-  ensureExamPaper();
-  document.getElementById('examSubject').value = state.examPaper.subject || '';
-  document.getElementById('examGrade').value = state.examPaper.grade || '';
-  document.getElementById('examDate').value = state.examPaper.date || '';
-  document.getElementById('examTime').value = state.examPaper.time || '';
-  document.getElementById('examTitle').value = state.examPaper.title || '';
+function examLabel(ex){
+  return ex.title || ex.subject || 'امتحان بدون عنوان';
+}
+
+function ensureExamPapers(){
+  if(!Array.isArray(state.examPapers)) state.examPapers = [];
+  if(state.examPapers.length === 0 && state.examPaper &&
+     (state.examPaper.subject || state.examPaper.title || (state.examPaper.questions && state.examPaper.questions.length))){
+    state.examPapers.push(Object.assign({ id: Date.now()+Math.random(), createdAt: Date.now() }, state.examPaper));
+  }
+  delete state.examPaper;
+  state.examPapers.forEach(ex=>{ if(!Array.isArray(ex.questions)) ex.questions = []; });
+}
+
+function currentExamPaper(){
+  return state.examPapers.find(ex => String(ex.id) === String(editingExamId));
+}
+
+function openExamList(){
+  ensureExamPapers();
+  renderExamList();
+  examListPage.classList.add('show');
+}
+function closeExamList(){ examListPage.classList.remove('show'); }
+
+function renderExamList(){
+  const list = document.getElementById('examListContainer');
+  const empty = document.getElementById('examListEmpty');
+  if(!state.examPapers.length){
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = state.examPapers.map(ex => `
+    <div class="note-card" data-id="${ex.id}" style="cursor:pointer;">
+      <button class="note-del" data-id="${ex.id}" title="حذف">✕</button>
+      <div class="n-date">${[ex.grade, ex.date].filter(Boolean).join(' • ')}</div>
+      <div class="n-text">${esc(examLabel(ex))}</div>
+    </div>
+  `).join('');
+  list.querySelectorAll('.note-card').forEach(card=>{
+    const id = card.getAttribute('data-id');
+    card.addEventListener('click', (e)=>{
+      if(e.target.classList.contains('note-del')) return;
+      openExamEditor(id);
+    });
+  });
+  list.querySelectorAll('.note-del').forEach(btn=>{
+    btn.addEventListener('click', async (e)=>{
+      e.stopPropagation();
+      const id = btn.getAttribute('data-id');
+      const ex = state.examPapers.find(x=>String(x.id)===id);
+      if(!(await confirmAction(`هل تريد حذف "${ex ? examLabel(ex) : 'هذا الامتحان'}"؟`))) return;
+      if(ex) moveToTrash('examPaper', examLabel(ex), ex, {});
+      state.examPapers = state.examPapers.filter(x=>String(x.id)!==id);
+      renderExamList();
+      saveState(false);
+    });
+  });
+}
+
+document.getElementById('examNewBtn').addEventListener('click', ()=>{
+  ensureExamPapers();
+  const ex = blankExamDoc();
+  state.examPapers.push(ex);
+  saveState(false);
+  openExamEditor(ex.id);
+});
+
+function openExamEditor(id){
+  ensureExamPapers();
+  editingExamId = id;
+  const ex = currentExamPaper();
+  if(!ex) return;
+  document.getElementById('examSubject').value = ex.subject || '';
+  document.getElementById('examGrade').value = ex.grade || '';
+  document.getElementById('examDate').value = ex.date || '';
+  document.getElementById('examTime').value = ex.time || '';
+  document.getElementById('examTitle').value = ex.title || '';
   renderExamQuestions();
+  examListPage.classList.remove('show');
   examPage.classList.add('show');
   syncTextColorInput('monthlyExam', 'monthlyExamColorInput');
 }
-function closeExamPage(){ examPage.classList.remove('show'); }
+function closeExamEditor(){
+  examPage.classList.remove('show');
+  editingExamId = null;
+  renderExamList();
+  examListPage.classList.add('show');
+}
+
+document.getElementById('examDeleteBtn').addEventListener('click', async ()=>{
+  const ex = currentExamPaper();
+  if(!ex) return;
+  if(!(await confirmAction(`هل تريد حذف "${examLabel(ex)}"؟`))) return;
+  moveToTrash('examPaper', examLabel(ex), ex, {});
+  state.examPapers = state.examPapers.filter(x=>String(x.id)!==String(editingExamId));
+  saveState(false);
+  editingExamId = null;
+  examPage.classList.remove('show');
+  renderExamList();
+  examListPage.classList.add('show');
+  toast('تم نقل الامتحان إلى سلة المحذوفات');
+});
 
 function renderExamQuestions(){
+  const ex = currentExamPaper();
+  if(!ex) return;
   const box = document.getElementById('examQuestions');
   box.innerHTML = '';
-  state.examPaper.questions.forEach((q, idx)=>{
+  ex.questions.forEach((q, idx)=>{
     const row = document.createElement('div');
     row.className = 'exam-q';
     row.setAttribute('data-id', q.id);
@@ -2776,30 +2907,35 @@ function renderExamQuestions(){
 let examSaveTimer = null;
 function scheduleExamSave(){ clearTimeout(examSaveTimer); examSaveTimer = setTimeout(()=> saveState(false), 500); }
 
-document.getElementById('examOpenBtn').addEventListener('click', openExamPage);
-document.getElementById('examBackBtn').addEventListener('click', closeExamPage);
+document.getElementById('examOpenBtn').addEventListener('click', openExamList);
+document.getElementById('examListBackBtn').addEventListener('click', closeExamList);
+document.getElementById('examBackBtn').addEventListener('click', closeExamEditor);
 
 ['examSubject','examGrade','examDate','examTime','examTitle'].forEach(id=>{
   document.getElementById(id).addEventListener('input', (e)=>{
-    ensureExamPaper();
+    const ex = currentExamPaper();
+    if(!ex) return;
     const field = { examSubject:'subject', examGrade:'grade', examDate:'date', examTime:'time', examTitle:'title' }[id];
-    state.examPaper[field] = e.target.value;
+    ex[field] = e.target.value;
     scheduleExamSave();
   });
 });
 
 document.getElementById('examAddQBtn').addEventListener('click', ()=>{
-  ensureExamPaper();
-  state.examPaper.questions.push({ id: Date.now()+Math.random(), text:'', degree:'' });
+  const ex = currentExamPaper();
+  if(!ex) return;
+  ex.questions.push({ id: Date.now()+Math.random(), text:'', degree:'' });
   renderExamQuestions();
   scheduleExamSave();
 });
 
 document.getElementById('examQuestions').addEventListener('input', (e)=>{
+  const ex = currentExamPaper();
+  if(!ex) return;
   const row = e.target.closest('.exam-q');
   if(!row) return;
   const id = row.getAttribute('data-id');
-  const q = state.examPaper.questions.find(x=>String(x.id)===id);
+  const q = ex.questions.find(x=>String(x.id)===id);
   if(!q) return;
   if(e.target.classList.contains('exam-q-text')) q.text = e.target.value;
   if(e.target.classList.contains('exam-q-deg')) q.degree = e.target.value;
@@ -2808,12 +2944,14 @@ document.getElementById('examQuestions').addEventListener('input', (e)=>{
 
 document.getElementById('examQuestions').addEventListener('click', async (e)=>{
   if(e.target.classList.contains('exam-q-del')){
+    const ex = currentExamPaper();
+    if(!ex) return;
     const row = e.target.closest('.exam-q');
     const id = row.getAttribute('data-id');
     if(!(await confirmAction('هل تريد حذف هذا السؤال؟'))) return;
-    const q = state.examPaper.questions.find(x=>String(x.id)===id);
-    if(q) moveToTrash('question', (q.text||'').slice(0,40) || 'سؤال بدون نص', q, {});
-    state.examPaper.questions = state.examPaper.questions.filter(x=>String(x.id)!==id);
+    const q = ex.questions.find(x=>String(x.id)===id);
+    if(q) moveToTrash('question', (q.text||'').slice(0,40) || 'سؤال بدون نص', q, { examId: editingExamId });
+    ex.questions = ex.questions.filter(x=>String(x.id)!==id);
     renderExamQuestions();
     scheduleExamSave();
   }
@@ -2822,30 +2960,121 @@ document.getElementById('examQuestions').addEventListener('click', async (e)=>{
 /* ================== أسئلة الامتحان اليومي ================== */
 const dailyExamPage = document.getElementById('dailyExamPage');
 
-function ensureDailyExamPaper(){
-  if(!state.dailyExamPaper){
-    state.dailyExamPaper = { subject:'', grade:'', date:'', time:'', title:'', questions:[] };
-  }
-  if(!state.dailyExamPaper.questions) state.dailyExamPaper.questions = [];
+const dailyExamListPage = document.getElementById('dailyExamListPage');
+let editingDailyExamId = null;
+
+function blankDailyExamDoc(){
+  return { id: Date.now()+Math.random(), subject:'', grade:'', date:'', time:'', title:'', questions:[], createdAt: Date.now() };
 }
 
-function openDailyExamPage(){
-  ensureDailyExamPaper();
-  document.getElementById('dailyExamSubject').value = state.dailyExamPaper.subject || '';
-  document.getElementById('dailyExamGrade').value = state.dailyExamPaper.grade || '';
-  document.getElementById('dailyExamDate').value = state.dailyExamPaper.date || '';
-  document.getElementById('dailyExamTime').value = state.dailyExamPaper.time || '';
-  document.getElementById('dailyExamTitle').value = state.dailyExamPaper.title || '';
+function ensureDailyExamPapers(){
+  if(!Array.isArray(state.dailyExamPapers)) state.dailyExamPapers = [];
+  if(state.dailyExamPapers.length === 0 && state.dailyExamPaper &&
+     (state.dailyExamPaper.subject || state.dailyExamPaper.title || (state.dailyExamPaper.questions && state.dailyExamPaper.questions.length))){
+    state.dailyExamPapers.push(Object.assign({ id: Date.now()+Math.random(), createdAt: Date.now() }, state.dailyExamPaper));
+  }
+  delete state.dailyExamPaper;
+  state.dailyExamPapers.forEach(ex=>{ if(!Array.isArray(ex.questions)) ex.questions = []; });
+}
+
+function currentDailyExamPaper(){
+  return state.dailyExamPapers.find(ex => String(ex.id) === String(editingDailyExamId));
+}
+
+function openDailyExamList(){
+  ensureDailyExamPapers();
+  renderDailyExamList();
+  dailyExamListPage.classList.add('show');
+}
+function closeDailyExamList(){ dailyExamListPage.classList.remove('show'); }
+
+function renderDailyExamList(){
+  const list = document.getElementById('dailyExamListContainer');
+  const empty = document.getElementById('dailyExamListEmpty');
+  if(!state.dailyExamPapers.length){
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = state.dailyExamPapers.map(ex => `
+    <div class="note-card" data-id="${ex.id}" style="cursor:pointer;">
+      <button class="note-del" data-id="${ex.id}" title="حذف">✕</button>
+      <div class="n-date">${[ex.grade, ex.date].filter(Boolean).join(' • ')}</div>
+      <div class="n-text">${esc(examLabel(ex))}</div>
+    </div>
+  `).join('');
+  list.querySelectorAll('.note-card').forEach(card=>{
+    const id = card.getAttribute('data-id');
+    card.addEventListener('click', (e)=>{
+      if(e.target.classList.contains('note-del')) return;
+      openDailyExamEditor(id);
+    });
+  });
+  list.querySelectorAll('.note-del').forEach(btn=>{
+    btn.addEventListener('click', async (e)=>{
+      e.stopPropagation();
+      const id = btn.getAttribute('data-id');
+      const ex = state.dailyExamPapers.find(x=>String(x.id)===id);
+      if(!(await confirmAction(`هل تريد حذف "${ex ? examLabel(ex) : 'هذا الامتحان'}"؟`))) return;
+      if(ex) moveToTrash('dailyExamPaper', examLabel(ex), ex, {});
+      state.dailyExamPapers = state.dailyExamPapers.filter(x=>String(x.id)!==id);
+      renderDailyExamList();
+      saveState(false);
+    });
+  });
+}
+
+document.getElementById('dailyExamNewBtn').addEventListener('click', ()=>{
+  ensureDailyExamPapers();
+  const ex = blankDailyExamDoc();
+  state.dailyExamPapers.push(ex);
+  saveState(false);
+  openDailyExamEditor(ex.id);
+});
+
+function openDailyExamEditor(id){
+  ensureDailyExamPapers();
+  editingDailyExamId = id;
+  const ex = currentDailyExamPaper();
+  if(!ex) return;
+  document.getElementById('dailyExamSubject').value = ex.subject || '';
+  document.getElementById('dailyExamGrade').value = ex.grade || '';
+  document.getElementById('dailyExamDate').value = ex.date || '';
+  document.getElementById('dailyExamTime').value = ex.time || '';
+  document.getElementById('dailyExamTitle').value = ex.title || '';
   renderDailyExamQuestions();
+  dailyExamListPage.classList.remove('show');
   dailyExamPage.classList.add('show');
   syncTextColorInput('dailyExam', 'dailyExamColorInput');
 }
-function closeDailyExamPage(){ dailyExamPage.classList.remove('show'); }
+function closeDailyExamEditor(){
+  dailyExamPage.classList.remove('show');
+  editingDailyExamId = null;
+  renderDailyExamList();
+  dailyExamListPage.classList.add('show');
+}
+
+document.getElementById('dailyExamDeleteBtn').addEventListener('click', async ()=>{
+  const ex = currentDailyExamPaper();
+  if(!ex) return;
+  if(!(await confirmAction(`هل تريد حذف "${examLabel(ex)}"؟`))) return;
+  moveToTrash('dailyExamPaper', examLabel(ex), ex, {});
+  state.dailyExamPapers = state.dailyExamPapers.filter(x=>String(x.id)!==String(editingDailyExamId));
+  saveState(false);
+  editingDailyExamId = null;
+  dailyExamPage.classList.remove('show');
+  renderDailyExamList();
+  dailyExamListPage.classList.add('show');
+  toast('تم نقل الامتحان إلى سلة المحذوفات');
+});
 
 function renderDailyExamQuestions(){
+  const ex = currentDailyExamPaper();
+  if(!ex) return;
   const box = document.getElementById('dailyExamQuestions');
   box.innerHTML = '';
-  state.dailyExamPaper.questions.forEach((q, idx)=>{
+  ex.questions.forEach((q, idx)=>{
     const row = document.createElement('div');
     row.className = 'exam-q';
     row.setAttribute('data-id', q.id);
@@ -2863,30 +3092,35 @@ function renderDailyExamQuestions(){
 let dailyExamSaveTimer = null;
 function scheduleDailyExamSave(){ clearTimeout(dailyExamSaveTimer); dailyExamSaveTimer = setTimeout(()=> saveState(false), 500); }
 
-document.getElementById('dailyExamOpenBtn').addEventListener('click', openDailyExamPage);
-document.getElementById('dailyExamBackBtn').addEventListener('click', closeDailyExamPage);
+document.getElementById('dailyExamOpenBtn').addEventListener('click', openDailyExamList);
+document.getElementById('dailyExamListBackBtn').addEventListener('click', closeDailyExamList);
+document.getElementById('dailyExamBackBtn').addEventListener('click', closeDailyExamEditor);
 
 ['dailyExamSubject','dailyExamGrade','dailyExamDate','dailyExamTime','dailyExamTitle'].forEach(id=>{
   document.getElementById(id).addEventListener('input', (e)=>{
-    ensureDailyExamPaper();
+    const ex = currentDailyExamPaper();
+    if(!ex) return;
     const field = { dailyExamSubject:'subject', dailyExamGrade:'grade', dailyExamDate:'date', dailyExamTime:'time', dailyExamTitle:'title' }[id];
-    state.dailyExamPaper[field] = e.target.value;
+    ex[field] = e.target.value;
     scheduleDailyExamSave();
   });
 });
 
 document.getElementById('dailyExamAddQBtn').addEventListener('click', ()=>{
-  ensureDailyExamPaper();
-  state.dailyExamPaper.questions.push({ id: Date.now()+Math.random(), text:'', degree:'' });
+  const ex = currentDailyExamPaper();
+  if(!ex) return;
+  ex.questions.push({ id: Date.now()+Math.random(), text:'', degree:'' });
   renderDailyExamQuestions();
   scheduleDailyExamSave();
 });
 
 document.getElementById('dailyExamQuestions').addEventListener('input', (e)=>{
+  const ex = currentDailyExamPaper();
+  if(!ex) return;
   const row = e.target.closest('.exam-q');
   if(!row) return;
   const id = row.getAttribute('data-id');
-  const q = state.dailyExamPaper.questions.find(x=>String(x.id)===id);
+  const q = ex.questions.find(x=>String(x.id)===id);
   if(!q) return;
   if(e.target.classList.contains('exam-q-text')) q.text = e.target.value;
   if(e.target.classList.contains('exam-q-deg')) q.degree = e.target.value;
@@ -2895,12 +3129,14 @@ document.getElementById('dailyExamQuestions').addEventListener('input', (e)=>{
 
 document.getElementById('dailyExamQuestions').addEventListener('click', async (e)=>{
   if(e.target.classList.contains('exam-q-del')){
+    const ex = currentDailyExamPaper();
+    if(!ex) return;
     const row = e.target.closest('.exam-q');
     const id = row.getAttribute('data-id');
     if(!(await confirmAction('هل تريد حذف هذا السؤال؟'))) return;
-    const q = state.dailyExamPaper.questions.find(x=>String(x.id)===id);
-    if(q) moveToTrash('dailyQuestion', (q.text||'').slice(0,40) || 'سؤال بدون نص', q, {});
-    state.dailyExamPaper.questions = state.dailyExamPaper.questions.filter(x=>String(x.id)!==id);
+    const q = ex.questions.find(x=>String(x.id)===id);
+    if(q) moveToTrash('dailyQuestion', (q.text||'').slice(0,40) || 'سؤال بدون نص', q, { examId: editingDailyExamId });
+    ex.questions = ex.questions.filter(x=>String(x.id)!==id);
     renderDailyExamQuestions();
     scheduleDailyExamSave();
   }
@@ -3257,8 +3493,8 @@ function printMasterSheet(){
 }
 
 function printExamPaper(){
-  ensureExamPaper();
-  const ex = state.examPaper;
+  const ex = currentExamPaper();
+  if(!ex) return;
   let qs = '';
   ex.questions.forEach((q, idx)=>{
     qs += `<div class="p-block"><span class="p-qnum">س${idx+1}.</span> ${esc(q.text)} ${q.degree? '<strong>('+esc(q.degree)+' درجة)</strong>':''}</div>`;
@@ -3276,8 +3512,8 @@ function printExamPaper(){
 }
 
 function printDailyExamPaper(){
-  ensureDailyExamPaper();
-  const ex = state.dailyExamPaper;
+  const ex = currentDailyExamPaper();
+  if(!ex) return;
   let qs = '';
   ex.questions.forEach((q, idx)=>{
     qs += `<div class="p-block"><span class="p-qnum">س${idx+1}.</span> ${esc(q.text)} ${q.degree? '<strong>('+esc(q.degree)+' درجة)</strong>':''}</div>`;
@@ -3461,27 +3697,33 @@ document.getElementById('backupExcelBtn').addEventListener('click', ()=>{
     (state.notes||[]).forEach(n=> notesAOA.push([n.date||'', n.text||'']));
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(notesAOA), sanitizeSheetName('الملاحظات'));
 
-    // ---- أسئلة الامتحان الشهري ----
-    const ep = state.examPaper || {};
-    const examAOA = [
-      ["المادة","الصف","التاريخ","الزمن","عنوان الامتحان"],
-      [ep.subject||'', ep.grade||'', ep.date||'', ep.time||'', ep.title||''],
-      [],
-      ["م","السؤال","الدرجة"]
-    ];
-    (ep.questions||[]).forEach((q,i)=> examAOA.push([i+1, q.text||'', q.degree||'']));
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(examAOA), sanitizeSheetName('أسئلة الامتحان الشهري'));
+    // ---- أسئلة الامتحان الشهري (ورقة لكل امتحان) ----
+    ensureExamPapers();
+    state.examPapers.forEach((ep, epIdx)=>{
+      const examAOA = [
+        ["المادة","الصف","التاريخ","الزمن","عنوان الامتحان"],
+        [ep.subject||'', ep.grade||'', ep.date||'', ep.time||'', ep.title||''],
+        [],
+        ["م","السؤال","الدرجة"]
+      ];
+      (ep.questions||[]).forEach((q,i)=> examAOA.push([i+1, q.text||'', q.degree||'']));
+      const label = 'شهري-' + (ep.title || ep.subject || (epIdx+1));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(examAOA), sanitizeSheetName(label));
+    });
 
-    // ---- أسئلة الامتحان اليومي ----
-    const dep = state.dailyExamPaper || {};
-    const dailyExamAOA = [
-      ["المادة","الصف","التاريخ","الزمن","عنوان الامتحان"],
-      [dep.subject||'', dep.grade||'', dep.date||'', dep.time||'', dep.title||''],
-      [],
-      ["م","السؤال","الدرجة"]
-    ];
-    (dep.questions||[]).forEach((q,i)=> dailyExamAOA.push([i+1, q.text||'', q.degree||'']));
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dailyExamAOA), sanitizeSheetName('أسئلة الامتحان اليومي'));
+    // ---- أسئلة الامتحان اليومي (ورقة لكل امتحان) ----
+    ensureDailyExamPapers();
+    state.dailyExamPapers.forEach((dep, depIdx)=>{
+      const dailyExamAOA = [
+        ["المادة","الصف","التاريخ","الزمن","عنوان الامتحان"],
+        [dep.subject||'', dep.grade||'', dep.date||'', dep.time||'', dep.title||''],
+        [],
+        ["م","السؤال","الدرجة"]
+      ];
+      (dep.questions||[]).forEach((q,i)=> dailyExamAOA.push([i+1, q.text||'', q.degree||'']));
+      const label = 'يومي-' + (dep.title || dep.subject || (depIdx+1));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dailyExamAOA), sanitizeSheetName(label));
+    });
 
     // ---- الخطة السنوية (ورقة لكل خطة) ----
     if(Array.isArray(state.annualPlans)){
@@ -3532,7 +3774,7 @@ loadState();
 
 /* ================== سلة المحذوفات ================== */
 const TRASH_LIFETIME_MS = 30 * 24 * 60 * 60 * 1000; // 30 يوماً
-const TRASH_TYPE_LABELS = { note:'ملاحظة', plan:'خطة يومية', student:'طالب', question:'سؤال امتحان شهري', dailyQuestion:'سؤال امتحان يومي', annualRow:'شهر (خطة سنوية)', annualPlan:'خطة سنوية', period:'حصة دراسية', masterSheet:'ماستر شيت', month:'شهر (خطة يومية)' };
+const TRASH_TYPE_LABELS = { note:'ملاحظة', plan:'خطة يومية', student:'طالب', question:'سؤال امتحان شهري', dailyQuestion:'سؤال امتحان يومي', annualRow:'شهر (خطة سنوية)', annualPlan:'خطة سنوية', period:'حصة دراسية', masterSheet:'ماستر شيت', month:'شهر (خطة يومية)', examPaper:'امتحان شهري', dailyExamPaper:'امتحان يومي' };
 const trashPage = document.getElementById('trashPage');
 
 function moveToTrash(type, label, payload, extra){
@@ -3612,11 +3854,29 @@ function restoreFromTrash(id){
     }
     if(document.getElementById('monthsGrid')) renderMonthsGrid();
   }else if(item.type === 'question'){
-    state.examPaper.questions.push(item.payload);
+    ensureExamPapers();
+    const examId = item.extra.examId;
+    const ex = state.examPapers.find(e => String(e.id) === String(examId));
+    if(ex){
+      ex.questions.push(item.payload);
+      if(editingExamId && String(editingExamId) === String(examId) && document.getElementById('examQuestions')) renderExamQuestions();
+    }
   }else if(item.type === 'dailyQuestion'){
-    ensureDailyExamPaper();
-    state.dailyExamPaper.questions.push(item.payload);
-    if(document.getElementById('dailyExamQuestions')) renderDailyExamQuestions();
+    ensureDailyExamPapers();
+    const examId = item.extra.examId;
+    const ex = state.dailyExamPapers.find(e => String(e.id) === String(examId));
+    if(ex){
+      ex.questions.push(item.payload);
+      if(editingDailyExamId && String(editingDailyExamId) === String(examId) && document.getElementById('dailyExamQuestions')) renderDailyExamQuestions();
+    }
+  }else if(item.type === 'examPaper'){
+    ensureExamPapers();
+    state.examPapers.push(item.payload);
+    if(document.getElementById('examListContainer')) renderExamList();
+  }else if(item.type === 'dailyExamPaper'){
+    ensureDailyExamPapers();
+    state.dailyExamPapers.push(item.payload);
+    if(document.getElementById('dailyExamListContainer')) renderDailyExamList();
   }else if(item.type === 'period'){
     const idx = Math.min(item.extra.index != null ? item.extra.index : state.periods.length, state.periods.length);
     state.periods.splice(idx, 0, item.payload.period);

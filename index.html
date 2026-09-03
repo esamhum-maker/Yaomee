@@ -579,6 +579,7 @@ footer.tip{ text-align:center; color:var(--ink-soft); font-size:11.5px; margin-t
 .fp-row input:focus, .fp-row textarea:focus, .fp-row select:focus{ border-color:var(--mustard); background:var(--card); }
 .fp-row textarea{ min-height:90px; resize:vertical; }
 .fp-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:6px; }
+#fpStarBtn.starred-active{ background:var(--mustard); color:var(--chalkboard-dark); border-color:var(--mustard); }
 .fp-del{ background:var(--rule-red); color:#fff; }
 
 /* ===== Exam questions ===== */
@@ -618,6 +619,33 @@ footer.tip{ text-align:center; color:var(--ink-soft); font-size:11.5px; margin-t
 .print-root .p-sign-block{ text-align:center; }
 .print-root .p-sign-block img{ max-width:200px; max-height:90px; display:block; margin:6px auto; }
 .print-root .p-qnum{ font-weight:700; margin-left:6px; }
+.print-root .p-page-break{ page-break-after:always; border-top:2px dashed #ccc; margin-top:26px; padding-top:26px; }
+
+.print-preview-overlay{
+  position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:150;
+  display:none; align-items:flex-start; justify-content:center; padding:30px 20px; overflow-y:auto;
+}
+.print-preview-overlay.show{ display:flex; }
+.print-preview-box{
+  background:#fff; color:#000; width:100%; max-width:900px;
+  border-radius:10px; padding:30px; position:relative;
+}
+.print-preview-box .print-root{ display:block; }
+.print-preview-actions{
+  display:flex; gap:10px; justify-content:center; margin-top:20px; padding-top:16px; border-top:1px solid #ddd;
+}
+
+.student-select-item{
+  display:flex; align-items:center; gap:10px; padding:9px 6px; border-bottom:1px solid var(--paper-line);
+  font-size:13.5px; color:var(--ink); cursor:pointer;
+}
+.student-select-item input{ width:18px; height:18px; cursor:pointer; }
+
+.progress-widget{ margin-bottom:16px; background:var(--card); border:1px solid var(--paper-line); border-radius:10px; padding:12px 14px; }
+.progress-widget-label{ font-size:12.5px; font-weight:700; color:var(--ink); margin-bottom:8px; }
+.progress-bar-track{ background:var(--paper-line); border-radius:20px; height:14px; overflow:hidden; }
+.progress-bar-fill{ background:var(--sage); height:100%; border-radius:20px; transition:width .3s; }
+.progress-bar-fill.progress-behind{ background:var(--rule-red); }
 
 @media print{
   @page{ size: landscape; margin: 10mm; }
@@ -774,6 +802,18 @@ table.ms-table td.sum-cell{ font-weight:700; color:var(--ink-soft); background:r
 }
 #archiveSearchInput:focus{ border-color:var(--mustard); }
 .archive-copy-btn{ margin-top:8px; }
+
+#glossarySearchInput{
+  width:100%; max-width:420px; border:1.5px solid var(--paper-line); border-radius:10px; padding:10px 12px;
+  font-family:'Tajawal'; font-size:14px; background:var(--card); color:var(--ink); outline:none;
+}
+#glossarySearchInput:focus{ border-color:var(--mustard); }
+.glossary-list{ display:flex; flex-direction:column; gap:10px; }
+.glossary-item{
+  background:var(--card); border:1px solid var(--paper-line); border-radius:12px; padding:14px 16px;
+}
+.glossary-term{ font-weight:800; font-size:15px; color:var(--chalkboard); margin-bottom:4px; }
+.glossary-def{ font-size:13.5px; color:var(--ink); line-height:1.7; }
 
 .mic-btn.mic-active{
   background:var(--rule-red); border-color:var(--rule-red); color:#fff;
@@ -944,7 +984,9 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
       <button class="btn btn-outline" id="masterOpenBtn">🗂️ ماستر شيت الدرجات</button>
       <button class="btn btn-outline" id="participationOpenBtn">🙋 المشاركة الصفية</button>
       <button class="btn btn-outline" id="archiveOpenBtn">🗄️ أرشيف الدروس</button>
+      <button class="btn btn-outline" id="favoritesOpenBtn">⭐ الخطط المميزة</button>
       <button class="btn btn-outline" id="bellOpenBtn">⏰ جرس الحصة</button>
+      <button class="btn btn-outline" id="glossaryOpenBtn">📖 قاموس المصطلحات</button>
       <label class="btn btn-outline" id="filePresentLabel" style="cursor:pointer;">🖥️ عرض تقديمي من الجهاز
         <input type="file" accept="video/*,.pdf,.docx,.xlsx,.xls,.csv,.pptx,.ppt,image/*" id="filePresentInput" hidden>
       </label>
@@ -1128,6 +1170,7 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
       </div>
 
       <div class="fp-actions">
+        <button class="btn btn-outline" id="fpStarBtn" title="تمييز كخطة مهمة">☆ تمييز</button>
         <button class="btn fp-del" id="fpDeleteBtn" style="display:none;">🗑️ حذف</button>
         <button class="btn btn-solid" id="fpSaveBtn">✓ حفظ الخطة</button>
       </div>
@@ -1212,6 +1255,18 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
   </div>
 </div>
 
+<!-- الخطط المميزة (المفضلة) -->
+<div class="full-page" id="favoritesPage">
+  <div class="fp-header">
+    <button class="fp-back" id="favoritesBackBtn">→ رجوع</button>
+    <h2>⭐ الخطط المميزة</h2>
+  </div>
+  <div class="fp-body">
+    <div id="favoritesList" class="notes-list"></div>
+    <div id="favoritesEmpty" class="trash-empty" style="display:none;">لا توجد خطط مميزة بعد — افتح أي خطة يومية واضغط "☆ تمييز" لإضافتها هنا.</div>
+  </div>
+</div>
+
 <!-- جرس نهاية الحصة -->
 <div class="full-page" id="bellPage">
   <div class="fp-header">
@@ -1230,6 +1285,39 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
         <button class="btn btn-outline" id="bellPauseBtn" style="display:none;">⏸️ إيقاف مؤقت</button>
         <button class="btn btn-outline" id="bellResetBtn">↺ إعادة تعيين</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- قاموس المصطلحات التربوية -->
+<div class="full-page" id="glossaryPage">
+  <div class="fp-header">
+    <button class="fp-back" id="glossaryBackBtn">→ رجوع</button>
+    <h2>📖 القاموس والمصطلحات</h2>
+  </div>
+  <div class="fp-body">
+    <div class="sem-toggle" id="glossaryTabToggle" style="max-width:420px;">
+      <button class="sem-toggle-btn active" data-tab="terms">📚 مصطلحات تربوية</button>
+      <button class="sem-toggle-btn" data-tab="translate">🔤 عربي - إنكليزي</button>
+    </div>
+
+    <div id="glossaryTermsTab">
+      <input type="text" id="glossarySearchInput" placeholder="ابحث عن مصطلح...">
+      <div id="glossaryList" class="glossary-list" style="margin-top:16px;"></div>
+      <div id="glossaryEmpty" class="trash-empty" style="display:none;">لا توجد نتائج مطابقة.</div>
+    </div>
+
+    <div id="translateTab" style="display:none;">
+      <p class="handwrite-hint">اختر اتجاه الترجمة (يتغيّر تلقائيًا حسب ما تكتب، ويمكنك تعديله يدويًا)، ثم اكتب الكلمة — يحتاج اتصالًا بالإنترنت.</p>
+      <div class="sem-toggle" id="translateDirToggle" style="max-width:420px;">
+        <button class="sem-toggle-btn active" data-dir="ar-en">عربي ← إنكليزي</button>
+        <button class="sem-toggle-btn" data-dir="en-ar">إنكليزي ← عربي</button>
+      </div>
+      <div style="display:flex; gap:10px; max-width:460px; flex-wrap:wrap;">
+        <input type="text" id="translateInput" placeholder="اكتب كلمة..." style="flex:1; min-width:200px; border:1.5px solid var(--paper-line); border-radius:10px; padding:10px 12px; font-family:'Tajawal'; font-size:14px; background:var(--card); color:var(--ink); outline:none;">
+        <button class="btn btn-solid" id="translateBtn">🔍 ترجم</button>
+      </div>
+      <div id="translateResult" class="glossary-item" style="margin-top:16px; display:none;"></div>
     </div>
   </div>
 </div>
@@ -1253,6 +1341,7 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
       <input type="file" accept=".xlsx,.xls,.csv" id="msImportInput" hidden>
     </label>
     <button class="fp-back" id="msPrintBtn">🖨️ طباعة</button>
+    <button class="fp-back" id="msReportsBtn">🖨️ تقارير الطلاب</button>
   </div>
   <div class="fp-body">
     <div class="ms-info">
@@ -1360,6 +1449,13 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
         <div class="fp-row">
           <label>العام الدراسي</label>
           <input type="text" id="annualYear" placeholder="مثال: 2025 - 2026">
+        </div>
+      </div>
+
+      <div class="progress-widget" id="annualProgressWidget">
+        <div class="progress-widget-label" id="annualProgressLabel">جارٍ الحساب...</div>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" id="annualProgressFill" style="width:0%;"></div>
         </div>
       </div>
 
@@ -1585,6 +1681,33 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
 </div>
 
 <div class="print-root" id="printRoot"></div>
+
+<!-- معاينة قبل الطباعة -->
+<div class="print-preview-overlay" id="printPreviewOverlay">
+  <div class="print-preview-box">
+    <div class="print-root" id="printPreviewContent"></div>
+    <div class="print-preview-actions">
+      <button class="btn btn-outline" id="printPreviewCancelBtn">إلغاء</button>
+      <button class="btn btn-solid" id="printPreviewConfirmBtn">🖨️ طباعة</button>
+    </div>
+  </div>
+</div>
+
+<!-- اختيار الطلاب لطباعة دفعية لتقاريرهم -->
+<div class="confirm-overlay" id="studentSelectOverlay">
+  <div class="confirm-box" style="max-width:420px; text-align:right;">
+    <div class="confirm-message" style="text-align:right;">اختر الطلاب المطلوب طباعة تقاريرهم</div>
+    <div style="display:flex; gap:8px; margin-bottom:12px;">
+      <button class="btn btn-outline" id="studentSelectAllBtn" style="flex:1; justify-content:center; font-size:12.5px;">تحديد الكل</button>
+      <button class="btn btn-outline" id="studentSelectNoneBtn" style="flex:1; justify-content:center; font-size:12.5px;">إلغاء التحديد</button>
+    </div>
+    <div id="studentSelectList" style="max-height:340px; overflow-y:auto; text-align:right; margin-bottom:14px;"></div>
+    <div class="confirm-actions">
+      <button class="btn btn-outline" id="studentSelectCancelBtn">إلغاء</button>
+      <button class="btn confirm-danger-btn" id="studentSelectPrintBtn" style="background:var(--sage);">🖨️ طباعة المحددين</button>
+    </div>
+  </div>
+</div>
 
 <div class="toast" id="toast"></div>
 
@@ -2562,6 +2685,7 @@ function openPlanEditor(planId){
     if(p && p.principalSig) loadImageToCanvas(principalCanvas, p.principalSig); else fillWhite(principalCanvas);
     if(p && p.supervisorSig) loadImageToCanvas(supervisorCanvas, p.supervisorSig); else fillWhite(supervisorCanvas);
     delBtn.style.display = 'inline-flex';
+    updateStarBtn(p && p.starred);
   }else{
     document.getElementById('fpClass').value = '';
     document.getElementById('fpDate').value = new Date().toISOString().slice(0,10);
@@ -2577,6 +2701,7 @@ function openPlanEditor(planId){
     fillWhite(principalCanvas);
     fillWhite(supervisorCanvas);
     delBtn.style.display = 'none';
+    updateStarBtn(false);
   }
 
   monthsPage.classList.remove('show');
@@ -2680,13 +2805,28 @@ function ensureEditingPlan(){
     eval: document.getElementById('fpEval').value,
     homework: document.getElementById('fpHomework').value,
     principalSig: '',
-    supervisorSig: ''
+    supervisorSig: '',
+    starred: false
   };
   state.dailyPlans[activeMonth].unshift(p);
   editingPlanId = p.id;
   document.getElementById('fpDeleteBtn').style.display = 'inline-flex';
   return p;
 }
+
+function updateStarBtn(isStarred){
+  const btn = document.getElementById('fpStarBtn');
+  btn.textContent = isStarred ? '⭐ مميّزة' : '☆ تمييز';
+  btn.classList.toggle('starred-active', !!isStarred);
+}
+
+document.getElementById('fpStarBtn').addEventListener('click', ()=>{
+  const p = ensureEditingPlan();
+  p.starred = !p.starred;
+  updateStarBtn(p.starred);
+  saveState(false);
+  toast(p.starred ? 'تمت إضافة الخطة للمميزة ⭐' : 'أُزيلت الخطة من المميزة');
+});
 
 let planSaveTimer = null;
 function schedulePlanSave(){ clearTimeout(planSaveTimer); planSaveTimer = setTimeout(()=> saveState(false), 500); }
@@ -2829,13 +2969,38 @@ function renderMasterList(){
       <button class="note-del" data-id="${m.id}" title="حذف">✕</button>
       <div class="n-date">${m.students.length} طالبًا</div>
       <div class="n-text">${esc(masterSheetLabel(m))}</div>
+      <button class="btn btn-outline master-copy-btn" data-id="${m.id}" style="margin-top:8px;">📋 نسخ كقالب لصف جديد</button>
     </div>
   `).join('');
   list.querySelectorAll('.note-card').forEach(card=>{
     const id = card.getAttribute('data-id');
     card.addEventListener('click', (e)=>{
-      if(e.target.classList.contains('note-del')) return;
+      if(e.target.classList.contains('note-del') || e.target.classList.contains('master-copy-btn')) return;
       openMasterSheetEditor(id);
+    });
+  });
+  list.querySelectorAll('.master-copy-btn').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const id = btn.getAttribute('data-id');
+      const source = state.masterSheets.find(x=>String(x.id)===id);
+      if(!source) return;
+      const copy = {
+        id: Date.now()+Math.random(),
+        year: source.year || '',
+        subject: source.subject || '',
+        grade: '',
+        students: source.students.map(s=>{
+          const st = blankStudent();
+          st.name = s.name || '';
+          return st;
+        }),
+        createdAt: Date.now()
+      };
+      state.masterSheets.push(copy);
+      saveState(false);
+      toast('تم إنشاء ماستر شيت جديد بنفس المادة وأسماء الطلاب — عدّل الصف حسب الحاجة ✓');
+      openMasterSheetEditor(copy.id);
     });
   });
   list.querySelectorAll('.note-del').forEach(btn=>{
@@ -3211,6 +3376,222 @@ function copyArchivedPlan(id, sourceMonth){
 document.getElementById('archiveOpenBtn').addEventListener('click', openArchive);
 document.getElementById('archiveBackBtn').addEventListener('click', closeArchive);
 document.getElementById('archiveSearchInput').addEventListener('input', (e)=> renderArchiveList(e.target.value));
+
+/* ================== الخطط المميزة (المفضلة) ================== */
+const favoritesPage = document.getElementById('favoritesPage');
+
+function renderFavorites(){
+  const list = document.getElementById('favoritesList');
+  const empty = document.getElementById('favoritesEmpty');
+  const starred = getAllPlansFlat().filter(p => p.starred);
+  starred.sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+  if(!starred.length){
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = starred.map(p => `
+    <div class="note-card" data-id="${p.id}" data-month="${esc(p.__month)}" style="cursor:pointer;">
+      <div class="n-date">⭐ ${[p.__month, p.day, formatDateDMY(p.date), p.subject].filter(Boolean).join(' • ')}</div>
+      <div class="n-text">${esc(p.title || 'بدون عنوان')}</div>
+    </div>
+  `).join('');
+  list.querySelectorAll('.note-card').forEach(card=>{
+    card.addEventListener('click', ()=>{
+      activeMonth = card.getAttribute('data-month');
+      favoritesPage.classList.remove('show');
+      openPlanEditor(card.getAttribute('data-id'));
+    });
+  });
+}
+
+document.getElementById('favoritesOpenBtn').addEventListener('click', ()=>{
+  renderFavorites();
+  favoritesPage.classList.add('show');
+});
+document.getElementById('favoritesBackBtn').addEventListener('click', ()=>{
+  favoritesPage.classList.remove('show');
+});
+
+/* ================== قاموس المصطلحات التربوية ================== */
+const glossaryPage = document.getElementById('glossaryPage');
+const GLOSSARY_TERMS = [
+  { term:'الأهداف السلوكية', def:'تصف السلوك الذي يُتوقع أن يُظهره الطالب في نهاية الدرس، بصيغة قابلة للملاحظة والقياس.' },
+  { term:'التقويم التشخيصي', def:'تقويم يُجرى قبل بدء التدريس لتحديد المستوى المسبق للطلاب ونقاط الضعف والقوة لديهم.' },
+  { term:'التقويم التكويني (البنائي)', def:'تقويم مستمر أثناء سير الدرس لمتابعة مدى تحقق الأهداف وتعديل طريقة التدريس عند الحاجة.' },
+  { term:'التقويم الختامي (النهائي)', def:'تقويم يُجرى في نهاية وحدة أو فصل دراسي لقياس مدى تحقق الأهداف الكلية.' },
+  { term:'طريقة الاستقراء', def:'أسلوب تدريس ينتقل من الأمثلة والحالات الجزئية إلى استنباط القاعدة العامة.' },
+  { term:'طريقة الاستنتاج', def:'أسلوب تدريس ينتقل من القاعدة أو المبدأ العام إلى الأمثلة والتطبيقات الجزئية.' },
+  { term:'التعلم النشط', def:'أسلوب تدريس يجعل الطالب محور العملية التعليمية عبر المشاركة الفعلية بدل التلقي السلبي.' },
+  { term:'الفروق الفردية', def:'الاختلافات بين الطلاب في القدرات والاستعداد وسرعة التعلم، وتستلزم تنويع أساليب التدريس.' },
+  { term:'الوسائل التعليمية', def:'الأدوات والمواد التي تساعد المدرّس على إيصال المعلومة، كالسبورة والصور والنماذج.' },
+  { term:'التغذية الراجعة', def:'المعلومات التي يقدّمها المدرّس للطالب حول أدائه، لتعزيز الصحيح وتصحيح الخطأ.' },
+  { term:'الخطة الدرسية (خطة الدرس)', def:'وثيقة تنظّم عناصر الحصة: الأهداف، الطريقة، الوسائل، خطوات العرض، والتقويم، قبل التنفيذ.' },
+  { term:'الخطة السنوية', def:'توزيع محتوى المنهج على أشهر العام الدراسي.' },
+  { term:'المنهج (المنهاج)', def:'مجموع الخبرات والمعارف والأنشطة المخطط لها لتحقيق أهداف تربوية محددة.' },
+  { term:'الكفاية (الكفاءة)', def:'قدرة الطالب على توظيف ما اكتسبه من معارف ومهارات في مواقف جديدة.' },
+  { term:'التمهيد (التهيئة)', def:'الخطوة الأولى في الدرس، تهدف لجذب انتباه الطلاب وربط الدرس بخبراتهم السابقة.' },
+  { term:'الأهداف المعرفية', def:'أهداف تتعلق باكتساب المعلومات والمفاهيم والحقائق.' },
+  { term:'الأهداف الوجدانية', def:'أهداف تتعلق بالمشاعر والاتجاهات والقيم لدى الطالب.' },
+  { term:'الأهداف المهارية (النفسحركية)', def:'أهداف تتعلق باكتساب مهارات حركية أو عملية لدى الطالب.' },
+  { term:'التعلم التعاوني', def:'أسلوب تدريس يعمل فيه الطلاب ضمن مجموعات صغيرة لتحقيق هدف تعليمي مشترك.' },
+  { term:'حل المشكلات', def:'أسلوب تدريس يواجه فيه الطالب موقفًا مشكلًا ويسعى لحله بخطوات منظمة.' },
+  { term:'العصف الذهني', def:'أسلوب لتوليد أكبر عدد ممكن من الأفكار حول موضوع معين دون نقد أو تقييم أولي.' },
+  { term:'الاختبار التحصيلي', def:'اختبار يقيس مقدار ما اكتسبه الطالب من معلومات ومهارات بعد فترة من التدريس.' },
+  { term:'معيار النجاح (حد الإتقان)', def:'النسبة أو الدرجة الدنيا التي تُعتبر مؤشرًا على تحقق الهدف التعليمي.' },
+  { term:'الوحدة الدراسية', def:'مجموعة من الدروس المترابطة التي تدور حول موضوع رئيسي واحد.' },
+  { term:'الأنشطة الإثرائية', def:'أنشطة إضافية تُقدَّم للطلاب المتفوقين لتعميق فهمهم بعد تحقيق الهدف الأساسي.' },
+  { term:'علاج الضعف (المعالجة)', def:'إجراءات إضافية تُقدَّم للطلاب الذين لم يحققوا الحد الأدنى من الأهداف المطلوبة.' },
+  { term:'بطاقة الملاحظة', def:'أداة تقويم تُسجَّل فيها سلوكيات أو أداء الطالب أثناء قيامه بنشاط معين.' },
+  { term:'سلّم التقدير (Rubric)', def:'أداة تحدد معايير ومستويات الأداء المختلفة لتقييم عمل الطالب بشكل موضوعي.' },
+  { term:'التقويم الذاتي', def:'أسلوب يقيّم فيه الطالب أداءه وتعلمه بنفسه وفق معايير محددة مسبقًا.' }
+];
+
+function renderGlossary(filter){
+  const list = document.getElementById('glossaryList');
+  const empty = document.getElementById('glossaryEmpty');
+  let terms = GLOSSARY_TERMS;
+  if(filter && filter.trim()){
+    const f = filter.trim().toLowerCase();
+    terms = terms.filter(t => t.term.toLowerCase().includes(f) || t.def.toLowerCase().includes(f));
+  }
+  if(!terms.length){
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = terms.map((t, i) => `
+    <div class="glossary-item">
+      <div class="glossary-term">${esc(t.term)}</div>
+      <div class="glossary-def">${esc(t.def)}</div>
+      <button class="btn btn-outline glossary-copy-btn" data-idx="${i}" style="margin-top:8px; font-size:12px; padding:6px 12px;">📋 نسخ</button>
+    </div>
+  `).join('');
+  list.querySelectorAll('.glossary-copy-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const t = terms[parseInt(btn.getAttribute('data-idx'), 10)];
+      if(t) copyTextToClipboard(`${t.term}: ${t.def}`);
+    });
+  });
+}
+
+document.getElementById('glossaryOpenBtn').addEventListener('click', ()=>{
+  document.getElementById('glossarySearchInput').value = '';
+  renderGlossary('');
+  glossaryPage.classList.add('show');
+});
+document.getElementById('glossaryBackBtn').addEventListener('click', ()=>{
+  glossaryPage.classList.remove('show');
+});
+document.getElementById('glossarySearchInput').addEventListener('input', (e)=> renderGlossary(e.target.value));
+
+document.getElementById('glossaryTabToggle').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.sem-toggle-btn');
+  if(!btn) return;
+  document.querySelectorAll('#glossaryTabToggle .sem-toggle-btn').forEach(b=> b.classList.toggle('active', b===btn));
+  const tab = btn.getAttribute('data-tab');
+  document.getElementById('glossaryTermsTab').style.display = tab === 'terms' ? 'block' : 'none';
+  document.getElementById('translateTab').style.display = tab === 'translate' ? 'block' : 'none';
+});
+
+function isArabicText(text){
+  return /[\u0600-\u06FF]/.test(text);
+}
+
+let translateDirection = 'ar-en';
+let lastTranslatedText = '';
+
+async function copyTextToClipboard(text){
+  if(!text){ toast('لا يوجد نص لنسخه'); return; }
+  try{
+    await navigator.clipboard.writeText(text);
+    toast('تم النسخ ✓');
+  }catch(err){
+    toast('تعذّر النسخ — انسخ النص يدويًا');
+  }
+}
+
+document.getElementById('translateDirToggle').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.sem-toggle-btn');
+  if(!btn) return;
+  translateDirection = btn.getAttribute('data-dir');
+  document.querySelectorAll('#translateDirToggle .sem-toggle-btn').forEach(b=> b.classList.toggle('active', b===btn));
+});
+
+document.getElementById('translateInput').addEventListener('input', (e)=>{
+  const word = e.target.value;
+  if(!word.trim()) return;
+  const detected = isArabicText(word) ? 'ar-en' : 'en-ar';
+  if(detected !== translateDirection){
+    translateDirection = detected;
+    document.querySelectorAll('#translateDirToggle .sem-toggle-btn').forEach(b=>{
+      b.classList.toggle('active', b.getAttribute('data-dir') === detected);
+    });
+  }
+});
+
+async function translateViaGoogle(word, source, target){
+  const params = new URLSearchParams({ client:'gtx', sl:source, tl:target, dt:'t', q:word });
+  const res = await fetch(`https://translate.googleapis.com/translate_a/single?${params.toString()}`);
+  if(!res.ok) throw new Error('bad response');
+  const data = await res.json();
+  if(!Array.isArray(data) || !Array.isArray(data[0])) throw new Error('bad shape');
+  return data[0].map(seg => seg[0]).join('');
+}
+
+async function translateViaMyMemory(word, langpair){
+  const params = new URLSearchParams({ q: word, langpair: langpair });
+  const res = await fetch(`https://api.mymemory.translated.net/get?${params.toString()}`);
+  if(!res.ok) throw new Error('bad response');
+  const data = await res.json();
+  const translated = data && data.responseData && data.responseData.translatedText;
+  if(!translated || /MYMEMORY WARNING|INVALID|NO QUERY/i.test(translated)) throw new Error('no translation');
+  return translated;
+}
+
+async function lookupTranslation(){
+  const input = document.getElementById('translateInput');
+  const word = input.value.trim();
+  const resultBox = document.getElementById('translateResult');
+  if(!word){
+    toast('اكتب كلمة أولاً');
+    return;
+  }
+  const isArToEn = translateDirection === 'ar-en';
+  const source = isArToEn ? 'ar' : 'en';
+  const target = isArToEn ? 'en' : 'ar';
+  resultBox.style.display = 'block';
+  resultBox.innerHTML = `<div class="glossary-def">جارٍ الترجمة...</div>`;
+  let translated = null;
+  try{
+    translated = await translateViaGoogle(word, source, target);
+  }catch(err){
+    try{
+      translated = await translateViaMyMemory(word, `${source}|${target}`);
+    }catch(err2){
+      resultBox.innerHTML = `<div class="glossary-def">تعذّر الاتصال بخدمة الترجمة — تحقق من اتصالك بالإنترنت.</div>`;
+      return;
+    }
+  }
+  if(!translated){
+    resultBox.innerHTML = `<div class="glossary-def">تعذّر العثور على ترجمة لهذه الكلمة.</div>`;
+    return;
+  }
+  lastTranslatedText = translated;
+  resultBox.innerHTML = `
+    <div class="glossary-term">${esc(word)}</div>
+    <div class="glossary-def" style="font-size:16px; margin-top:6px; direction:${isArToEn ? 'ltr' : 'rtl'}; text-align:${isArToEn ? 'left' : 'right'};">${esc(translated)}</div>
+    <button class="btn btn-outline" id="translateCopyBtn" style="margin-top:10px;">📋 نسخ الترجمة</button>
+  `;
+  document.getElementById('translateCopyBtn').addEventListener('click', ()=> copyTextToClipboard(lastTranslatedText));
+}
+
+document.getElementById('translateBtn').addEventListener('click', lookupTranslation);
+document.getElementById('translateInput').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter') lookupTranslation();
+});
 
 /* ================== جرس نهاية الحصة ================== */
 const bellPage = document.getElementById('bellPage');
@@ -4234,9 +4615,41 @@ function openAnnualEditor(id){
   if(p.principalSig) loadImageToCanvas(annualPrincipalCanvas, p.principalSig); else fillWhite(annualPrincipalCanvas);
   if(p.teacherSig) loadImageToCanvas(annualTeacherCanvas, p.teacherSig); else fillWhite(annualTeacherCanvas);
   renderAnnualBody();
+  renderAnnualProgress(p);
   annualListPage.classList.remove('show');
   annualPlanPage.classList.add('show');
   syncTextColorInput('annual', 'annualColorInput');
+}
+
+const SCHOOL_YEAR_MONTH_ORDER = {
+  'أيلول':1, 'تشرين الأول':2, 'تشرين الثاني':3, 'كانون الأول':4, 'كانون الثاني':5,
+  'شباط':6, 'آذار':7, 'نيسان':8, 'أيار':9, 'حزيران':10, 'تموز':11, 'آب':12
+};
+
+function currentSchoolYearMonthIndex(){
+  const m = new Date().getMonth() + 1;
+  return m >= 9 ? (m - 8) : (m + 4);
+}
+
+function renderAnnualProgress(plan){
+  const label = document.getElementById('annualProgressLabel');
+  const fill = document.getElementById('annualProgressFill');
+  const currentIdx = currentSchoolYearMonthIndex();
+  const dueRows = (plan.rows||[]).filter(r=>{
+    const idx = SCHOOL_YEAR_MONTH_ORDER[(r.month||'').trim()];
+    return idx !== undefined && idx <= currentIdx;
+  });
+  if(!dueRows.length){
+    label.textContent = 'لا توجد أشهر مستحقة بعد حسب التقويم الحالي.';
+    fill.style.width = '0%';
+    fill.classList.remove('progress-behind');
+    return;
+  }
+  const completedCount = dueRows.filter(r => (state.dailyPlans[(r.month||'').trim()]||[]).length > 0).length;
+  const pct = Math.round((completedCount / dueRows.length) * 100);
+  label.textContent = `وتيرة الإنجاز: أنجزت خططًا في ${completedCount} من ${dueRows.length} شهرًا مستحقًا حتى الآن (${pct}%)`;
+  fill.style.width = pct + '%';
+  fill.classList.toggle('progress-behind', pct < 60);
 }
 function closeAnnualEditor(){
   const p = currentAnnualPlan();
@@ -4377,9 +4790,17 @@ window.addEventListener('afterprint', ()=>{
 
 function doPrint(html){
   document.getElementById('printRoot').innerHTML = html;
+  document.getElementById('printPreviewContent').innerHTML = html;
+  document.getElementById('printPreviewOverlay').classList.add('show');
+}
+document.getElementById('printPreviewCancelBtn').addEventListener('click', ()=>{
+  document.getElementById('printPreviewOverlay').classList.remove('show');
+});
+document.getElementById('printPreviewConfirmBtn').addEventListener('click', ()=>{
+  document.getElementById('printPreviewOverlay').classList.remove('show');
   document.body.classList.add('printing');
   setTimeout(()=> window.print(), 50);
-}
+});
 
 function esc(s){
   const d = document.createElement('div');
@@ -4555,6 +4976,74 @@ document.getElementById('msPrintBtn').addEventListener('click', printMasterSheet
 document.getElementById('examPrintBtn').addEventListener('click', printExamPaper);
 document.getElementById('dailyExamPrintBtn').addEventListener('click', printDailyExamPaper);
 document.getElementById('fpPrintBtn').addEventListener('click', printCurrentPlan);
+
+/* ================== طباعة دفعية لتقارير الطلاب ================== */
+document.getElementById('msReportsBtn').addEventListener('click', ()=>{
+  const m = currentMasterSheet();
+  if(!m || !m.students.length){
+    toast('لا يوجد طلاب في هذا الماستر شيت');
+    return;
+  }
+  const list = document.getElementById('studentSelectList');
+  list.innerHTML = m.students.map(s => `
+    <label class="student-select-item">
+      <input type="checkbox" class="student-select-cb" value="${s.id}" checked>
+      ${esc(s.name || 'بدون اسم')}
+    </label>
+  `).join('');
+  document.getElementById('studentSelectOverlay').classList.add('show');
+});
+
+document.getElementById('studentSelectCancelBtn').addEventListener('click', ()=>{
+  document.getElementById('studentSelectOverlay').classList.remove('show');
+});
+document.getElementById('studentSelectAllBtn').addEventListener('click', ()=>{
+  document.querySelectorAll('.student-select-cb').forEach(cb=> cb.checked = true);
+});
+document.getElementById('studentSelectNoneBtn').addEventListener('click', ()=>{
+  document.querySelectorAll('.student-select-cb').forEach(cb=> cb.checked = false);
+});
+
+document.getElementById('studentSelectPrintBtn').addEventListener('click', ()=>{
+  const m = currentMasterSheet();
+  if(!m) return;
+  const selectedIds = [...document.querySelectorAll('.student-select-cb:checked')].map(cb=>cb.value);
+  if(!selectedIds.length){
+    toast('اختر طالبًا واحدًا على الأقل');
+    return;
+  }
+  const students = m.students.filter(s => selectedIds.includes(String(s.id)));
+  const gradeSelect = document.getElementById('msGradeSelect');
+  const gradeLabel = m.grade;
+
+  const reportsHTML = students.map((s, idx) => `
+    <div${idx > 0 ? ' class="p-page-break"' : ''}>
+      <h2>تقرير درجات — ${esc(s.name || 'بدون اسم')}</h2>
+      <div class="p-meta">
+        <span>الصف:</span> ${esc(gradeLabel)} &nbsp; | &nbsp;
+        <span>المادة:</span> ${esc(m.subject)} &nbsp; | &nbsp;
+        <span>العام الدراسي:</span> ${esc(m.year)}
+      </div>
+      <table>
+        <thead>
+          <tr><th></th><th>يومي1</th><th>يومي2</th><th>يومي3</th><th>يومي4</th><th>يومي5</th><th>مجموع اليومي</th><th>شهري1</th><th>شهري2</th><th>مجموع الشهري</th><th>معدل الفصل</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>الفصل الأول</td><td>${esc(s.s1.d1)}</td><td>${esc(s.s1.d2)}</td><td>${esc(s.s1.d3)}</td><td>${esc(s.s1.d4)}</td><td>${esc(s.s1.d5)}</td><td>${esc(s.s1.dsum)}</td><td>${esc(s.s1.m1)}</td><td>${esc(s.s1.m2)}</td><td>${esc(s.s1.msum)}</td><td>${esc(s.s1.avg)}</td></tr>
+          <tr><td>الفصل الثاني</td><td>${esc(s.s2.d1)}</td><td>${esc(s.s2.d2)}</td><td>${esc(s.s2.d3)}</td><td>${esc(s.s2.d4)}</td><td>${esc(s.s2.d5)}</td><td>${esc(s.s2.dsum)}</td><td>${esc(s.s2.m1)}</td><td>${esc(s.s2.m2)}</td><td>${esc(s.s2.msum)}</td><td>${esc(s.s2.avg)}</td></tr>
+        </tbody>
+      </table>
+      <div class="p-meta" style="margin-top:14px;">
+        <span>نصف السنة:</span> ${esc(s.mid)} &nbsp; | &nbsp;
+        <span>السعي السنوي:</span> ${esc(s.annual)}
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('studentSelectOverlay').classList.remove('show');
+  doPrint(reportsHTML);
+  toast(`تجهيز تقارير ${students.length} طالبًا ✓`);
+});
 
 /* ================== النسخ الاحتياطي (تصدير / استيراد) ================== */
 document.getElementById('backupExportBtn').addEventListener('click', ()=>{

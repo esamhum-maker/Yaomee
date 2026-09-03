@@ -1,13 +1,12 @@
 {
   "name": "الخطة اليومية للمدرّس",
   "short_name": "الخطة اليومية",
-  "description": "جدول الحصص الأسبوعي، الخطة اليومية، ماستر شيت الدرجات، وأسئلة الامتحانات — في تطبيق واحد",
+  "description": "تطبيق شامل للمدرّس: خطط يومية وسنوية، ماستر شيت الدرجات، امتحانات، جدول الحصص، وأدوات مساعدة أخرى",
   "start_url": "./index.html",
-  "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#F3EFE3",
+  "background_color": "#F3EEDF",
   "theme_color": "#24423B",
+  "orientation": "any",
   "dir": "rtl",
   "lang": "ar",
   "icons": [

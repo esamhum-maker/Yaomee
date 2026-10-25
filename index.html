@@ -947,6 +947,7 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
       </div>
     </div>
     <div class="header-right">
+      <div class="date-chip" id="appVersionChip" title="رقم إصدار التطبيق — أرسله عند طلب الدعم الفني" style="opacity:0.6; font-size:11px; cursor:default;">v77</div>
       <div class="date-chip" id="todayChip">—</div>
       <div class="theme-picker">
         <button class="theme-btn" id="darkModeBtn" title="الوضع الليلي">
@@ -2375,6 +2376,53 @@ function ensureDocxImportV2(){
   toast('تم استيراد ' + DOCX_IMPORT_V2_LESSONS.length + ' خطة إضافية — أصبحت الخطط اليومية على 4 أزرار ✓');
 }
 
+// الاستيراد النهائي المبسّط: يضع كل الخطط الـ153 المستوردة من ملفات الوورد (42 علوم أول + 45 رياضيات أول
+// + 24 علوم ثاني + 42 علوم ثالث) داخل دلو واحد "دروس مستوردة (غير مصنّفة)" يظهر تلقائيًا في صفحة
+// "🗄️ أرشيف الدروس" (لأن الأرشيف يجمع كل الخطط من كل الدلاء)، بحيث يستطيع المستخدم نقل كل خطة يدويًا
+// إلى زر الصف الصحيح بنفسه عبر زر "📋 نسخ إلى الشهر المحدد" الموجود أصلًا في الأرشيف.
+// هذا يحل محل محاولات التوزيع التلقائي السابقة (ensureDocxImportV1 / fixGradeGroupingV1 / ensureDocxImportV2)
+// التي لم تظهر كما ينبغي على جهاز المستخدم، ويتعامل بأمان مع أي حالة سابقة على الجهاز (نظيف، أو فيه بيانات
+// من محاولة سابقة) دون تكرار أو فقدان أي خطة.
+function ensureFinalDocxConsolidation(){
+  if(localStorage.getItem('docxConsolidationDone') === 'true') return;
+  const holdingKey = 'دروس مستوردة (غير مصنّفة)';
+  if(!state.dailyPlans[holdingKey]) state.dailyPlans[holdingKey] = [];
+
+  const sourceKeys = ['الصف الأول','الصف الأول - علوم','الصف الأول - رياضيات','الصف الثاني','الصف الثالث',
+    'أيلول','تشرين الأول','تشرين الثاني','كانون الأول'];
+  let pulledAny = false;
+  sourceKeys.forEach(k=>{
+    if(state.dailyPlans[k] && state.dailyPlans[k].length){
+      state.dailyPlans[holdingKey] = state.dailyPlans[holdingKey].concat(state.dailyPlans[k]);
+      pulledAny = true;
+    }
+    delete state.dailyPlans[k];
+    if(Array.isArray(state.months)) state.months = state.months.filter(m => m !== k);
+  });
+
+  if(!pulledAny){
+    // لم يسبق أن نجح أي استيراد على هذا الجهاز — نبني القائمة مباشرة من المصدر الأصلي
+    const combined = DOCX_IMPORT_V1_LESSONS.concat(DOCX_IMPORT_V2_LESSONS);
+    combined.forEach(l=>{
+      state.dailyPlans[holdingKey].push({
+        id: Date.now() + Math.random(),
+        cls: l.cls, date: '', day: '', subject: l.subject, title: l.title,
+        goals: l.goals, method: l.method, tools: l.tools, steps: l.steps, eval: l.eval, homework: l.homework,
+        principalSig: '', supervisorSig: '', starred: false
+      });
+    });
+  }
+
+  ensureMonths();
+  DEFAULT_MONTHS.forEach(m=>{
+    if(!state.months.includes(m)) state.months.push(m);
+    if(!state.dailyPlans[m]) state.dailyPlans[m] = [];
+  });
+
+  localStorage.setItem('docxConsolidationDone', 'true');
+  saveState(false);
+  toast('تمت إضافة ' + state.dailyPlans[holdingKey].length + ' خطة إلى أرشيف الدروس — افتح "🗄️ أرشيف الدروس" لنقل كل خطة إلى الصف المناسب');
+}
 
 async function loadState(){
   try{
@@ -2396,9 +2444,7 @@ async function loadState(){
   ensureAnnualPlans();
   ensureMasterSheets();
   ensureMonths();
-  ensureDocxImportV1();
-  fixGradeGroupingV1();
-  ensureDocxImportV2();
+  ensureFinalDocxConsolidation();
   ensureExamPapers();
   ensureDailyExamPapers();
   applyTheme(state.theme || 'default');
@@ -6077,7 +6123,21 @@ document.getElementById('booksFileInput').addEventListener('change', async (e)=>
 /* PWA: enables offline use & installability */
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
-    navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+    navigator.serviceWorker.register('service-worker.js').then(reg=>{
+      // إشعار فوري عند وجود نسخة جديدة من التطبيق مخزّنة بانتظار التفعيل، بدل أن تبقى غير ظاهرة للمستخدم
+      if(reg.waiting){
+        toast('يوجد تحديث جديد للتطبيق — يُنصح بإغلاق كل نوافذ التطبيق وإعادة فتحه الآن');
+      }
+      reg.addEventListener('updatefound', ()=>{
+        const newWorker = reg.installing;
+        if(!newWorker) return;
+        newWorker.addEventListener('statechange', ()=>{
+          if(newWorker.state === 'installed' && navigator.serviceWorker.controller){
+            toast('تم تنزيل تحديث جديد للتطبيق — أغلق كل نوافذ التطبيق وأعد فتحه ليظهر التحديث');
+          }
+        });
+      });
+    }).catch(()=>{});
   });
 }
 </script>

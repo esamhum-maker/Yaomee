@@ -925,6 +925,10 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
 .books-nav{ display:flex; align-items:center; justify-content:center; gap:14px; padding:10px 0; }
 .books-nav span{ font-size:13px; color:var(--ink-soft); font-weight:700; min-width:110px; text-align:center; }
 .books-viewer-toolbar{ display:flex; align-items:center; gap:12px; padding-bottom:8px; flex-wrap:wrap; }
+.archive-tabs{display:flex;flex-direction:row;gap:6px;overflow-x:auto;margin-bottom:12px;}
+.archive-tab{flex:1 1 0;min-width:0;padding:9px 4px;border:2px solid var(--c);background:#fff;color:var(--c);border-radius:10px;font:inherit;font-weight:700;font-size:12px;cursor:pointer;white-space:normal;line-height:1.3;}
+.archive-tab.active{background:var(--c);color:#fff;}
+.archive-group-title{margin:14px 0 6px;font-size:15px;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
@@ -947,7 +951,7 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
       </div>
     </div>
     <div class="header-right">
-      <div class="date-chip" id="appVersionChip" title="رقم إصدار التطبيق — أرسله عند طلب الدعم الفني" style="opacity:0.6; font-size:11px; cursor:default;">v77</div>
+      <div class="date-chip" id="appVersionChip" title="رقم إصدار التطبيق — أرسله عند طلب الدعم الفني" style="opacity:0.6; font-size:11px; cursor:default;">v80</div>
       <div class="date-chip" id="todayChip">—</div>
       <div class="theme-picker">
         <button class="theme-btn" id="darkModeBtn" title="الوضع الليلي">
@@ -1265,9 +1269,19 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
   </div>
   <div class="fp-body">
     <p class="handwrite-hint">كل خطة يومية كتبتها من قبل محفوظة هنا — ابحث عنها، واختر صفًا، ثم انسخها إليه بضغطة واحدة بدل الكتابة من الصفر.</p>
-    <input type="text" id="archiveSearchInput" placeholder="ابحث بعنوان الدرس أو المادة...">
+    <div id="archiveTabs" class="archive-tabs">
+      <button class="archive-tab" data-group="الصف الأول - الرياضيات" style="--c:#e67e22">الأول - الرياضيات</button>
+      <button class="archive-tab" data-group="الصف الأول - العلوم" style="--c:#27ae60">الأول - علوم</button>
+      <button class="archive-tab" data-group="الصف الثاني - العلوم" style="--c:#2980b9">الثاني - علوم</button>
+      <button class="archive-tab" data-group="الصف الثالث - العلوم" style="--c:#8e44ad">الثالث - علوم</button>
+    </div>
+    <div class="fp-row" style="max-width:320px;">
+      <label>عرض خطط الصف/المادة</label>
+      <select id="archiveGroupFilter"></select>
+    </div>
+    <input type="text" id="archiveSearchInput" style="margin-top:12px;" placeholder="ابحث بعنوان الدرس أو رقم الخطة...">
     <div class="fp-row" style="margin-top:12px; max-width:320px;">
-      <label>انسخ إلى صف</label>
+      <label>انسخ إلى صف/مادة</label>
       <select id="archiveTargetMonth"></select>
     </div>
     <div id="archiveList" class="notes-list" style="margin-top:14px;"></div>
@@ -2424,6 +2438,26 @@ function ensureFinalDocxConsolidation(){
   toast('تمت إضافة ' + state.dailyPlans[holdingKey].length + ' خطة إلى أرشيف الدروس — افتح "🗄️ أرشيف الدروس" لنقل كل خطة إلى الصف المناسب');
 }
 
+function ensureGrade2Placed(){
+  if(localStorage.getItem('grade2PlacedV1') === 'true') return;
+  const holding = state.dailyPlans['دروس مستوردة (غير مصنّفة)'] || [];
+  const src = holding.filter(p => (p.cls||'').trim()==='الثاني' && (p.subject||'').trim()==='العلوم');
+  if(!src.length) return;
+  const key = 'الصف الثاني';
+  if(!state.dailyPlans[key]) state.dailyPlans[key] = [];
+  ensureMonths(); if(!state.months.includes(key)) state.months.push(key);
+  const have = new Set(state.dailyPlans[key].map(p => (p.title||'').replace(/\s+/g,' ').trim()));
+  let n = 0;
+  src.forEach(p=>{
+    const t = (p.title||'').replace(/\s+/g,' ').trim();
+    if(have.has(t)) return;
+    const c = JSON.parse(JSON.stringify(p)); c.id = Date.now()+Math.random(); c.date=''; c.day='';
+    state.dailyPlans[key].push(c); have.add(t); n++;
+  });
+  localStorage.setItem('grade2PlacedV1','true');
+  saveState(false);
+  if(n) toast('تم نقل '+n+' خطة علوم إلى زر الصف الثاني ✓');
+}
 async function loadState(){
   try{
     let raw = null;
@@ -2444,7 +2478,7 @@ async function loadState(){
   ensureAnnualPlans();
   ensureMasterSheets();
   ensureMonths();
-  ensureFinalDocxConsolidation();
+  ensureFinalDocxConsolidation(); ensureGrade2Placed();
   ensureExamPapers();
   ensureDailyExamPapers();
   applyTheme(state.theme || 'default');
@@ -3673,8 +3707,10 @@ const archivePage = document.getElementById('archivePage');
 
 function openArchive(){
   renderArchiveMonthSelect();
-  renderArchiveList('');
   document.getElementById('archiveSearchInput').value = '';
+  renderArchiveGroupSelect();
+  syncArchiveTabs();
+  renderArchiveList('');
   archivePage.classList.add('show');
 }
 function closeArchive(){ archivePage.classList.remove('show'); }
@@ -3693,28 +3729,74 @@ function getAllPlansFlat(){
   return out;
 }
 
+const HOLDING_BUCKET = 'دروس مستوردة (غير مصنّفة)';
+function archiveGroupLabel(p){
+  const c = (p.cls||'').trim(), sj = (p.subject||'').trim();
+  if(!c && !sj) return 'بدون تصنيف';
+  return [c ? (c.startsWith('الصف') ? c : 'الصف ' + c) : '', sj].filter(Boolean).join(' - ');
+}
+function archiveNorm(t){ return (t||'').replace(/\s+/g,' ').trim(); }
+function archiveLessonKey(p){ return archiveGroupLabel(p) + '|' + archiveNorm(p.title); }
+// يبني قائمة دروس فريدة (درس واحد لكل عنوان) مع رقم الخطة داخل كل صف/مادة، وأماكن وجود نسخ منه
+function buildArchiveLessons(){
+  const buckets = Object.keys(state.dailyPlans||{}).sort((a,b)=> (a===HOLDING_BUCKET?-1:0) - (b===HOLDING_BUCKET?-1:0));
+  const map = new Map(); const groupCount = {};
+  buckets.forEach(bk=>{
+    const arr = (state.dailyPlans[bk]||[]);
+    const ordered = bk===HOLDING_BUCKET ? arr : arr.slice().reverse();
+    ordered.forEach(p=>{
+      const key = archiveLessonKey(p);
+      let L = map.get(key);
+      if(!L){
+        const g = archiveGroupLabel(p);
+        groupCount[g] = (groupCount[g]||0) + 1;
+        L = { group: g, num: groupCount[g], plan: p, srcId: p.id, srcBucket: bk, where: [] };
+        map.set(key, L);
+      }
+      if(bk !== HOLDING_BUCKET && !L.where.includes(bk)) L.where.push(bk);
+    });
+  });
+  return Array.from(map.values());
+}
+function archiveGroupsList(){
+  const seen = []; buildArchiveLessons().forEach(L=>{ if(!seen.includes(L.group)) seen.push(L.group); });
+  return seen;
+}
+function renderArchiveGroupSelect(){
+  const sel = document.getElementById('archiveGroupFilter');
+  const cur = sel.value;
+  const groups = archiveGroupsList();
+  sel.innerHTML = '<option value="">الكل</option>' + groups.map(g=>`<option value="${esc(g)}">${esc(g)}</option>`).join('');
+  if(groups.includes(cur)) sel.value = cur;
+}
 function renderArchiveList(filter){
+  if(filter === undefined) filter = document.getElementById('archiveSearchInput').value;
   const list = document.getElementById('archiveList');
   const empty = document.getElementById('archiveEmpty');
-  let plans = getAllPlansFlat();
+  const grp = document.getElementById('archiveGroupFilter').value;
+  let items = buildArchiveLessons();
+  if(grp) items = items.filter(L => L.group === grp);
   if(filter && filter.trim()){
     const f = filter.trim().toLowerCase();
-    plans = plans.filter(p => (p.title||'').toLowerCase().includes(f) || (p.subject||'').toLowerCase().includes(f));
+    items = items.filter(L => (L.plan.title||'').toLowerCase().includes(f) || (L.plan.subject||'').toLowerCase().includes(f) || String(L.num) === f);
   }
-  plans.sort((a,b)=> (b.date||'').localeCompare(a.date||''));
-  if(!plans.length){
-    list.innerHTML = '';
-    empty.style.display = 'block';
-    return;
-  }
+  const order = archiveGroupsList();
+  items.sort((a,b)=> order.indexOf(a.group)-order.indexOf(b.group) || a.num-b.num);
+  if(!items.length){ list.innerHTML = ''; empty.style.display = 'block'; return; }
   empty.style.display = 'none';
-  list.innerHTML = plans.map(p => `
-    <div class="note-card" data-id="${p.id}" data-month="${esc(p.__month)}">
-      <div class="n-date">${[p.__month, p.day, formatDateDMY(p.date), p.subject].filter(Boolean).join(' • ')}</div>
+  let lastG = null, html = '';
+  items.forEach(L=>{
+    if(!grp && L.group !== lastG){ html += `<h3 class="archive-group-title">${esc(L.group)}</h3>`; lastG = L.group; }
+    const p = L.plan;
+    html += `
+    <div class="note-card" data-id="${p.id}" data-month="${esc(L.srcBucket)}">
+      <div class="n-date"><b>خطة رقم ${L.num}</b> • ${esc(L.group)}${p.day?' • '+esc(p.day):''}</div>
       <div class="n-text">${esc(p.title || 'بدون عنوان')}</div>
-      <button class="btn btn-outline archive-copy-btn" data-id="${p.id}" data-month="${esc(p.__month)}">📋 نسخ إلى الشهر المحدد</button>
-    </div>
-  `).join('');
+      ${L.where.length ? `<div class="n-date" style="color:#2e7d32;">✓ موجودة في: ${L.where.map(esc).join('، ')}</div>` : ''}
+      <button class="btn btn-outline archive-copy-btn" data-id="${p.id}" data-month="${esc(L.srcBucket)}">📋 نسخ إلى الصف/المادة المحددة</button>
+    </div>`;
+  });
+  list.innerHTML = html;
   list.querySelectorAll('.archive-copy-btn').forEach(btn=>{
     btn.addEventListener('click', (e)=>{
       e.stopPropagation();
@@ -3727,20 +3809,36 @@ function copyArchivedPlan(id, sourceMonth){
   const source = (state.dailyPlans[sourceMonth]||[]).find(p=>String(p.id)===id);
   if(!source) return;
   const targetMonth = document.getElementById('archiveTargetMonth').value;
-  if(!targetMonth){ toast('اختر شهرًا أولاً'); return; }
+  if(!targetMonth){ toast('اختر صفًا/مادة أولاً'); return; }
   if(!state.dailyPlans[targetMonth]) state.dailyPlans[targetMonth] = [];
+  const key = archiveLessonKey(source);
+  if(state.dailyPlans[targetMonth].some(p => archiveLessonKey(p) === key)){
+    toast('الخطة موجودة في الصف/المادة المعينة');
+    return;
+  }
   const copy = JSON.parse(JSON.stringify(source));
   copy.id = Date.now()+Math.random();
   copy.date = '';
   copy.day = '';
   state.dailyPlans[targetMonth].unshift(copy);
   saveState(false);
-  toast(`تم نسخ الدرس إلى شهر ${targetMonth} ✓`);
+  toast(`تم نسخ الخطة إلى ${targetMonth} ✓`);
+  renderArchiveList();
 }
 
 document.getElementById('archiveOpenBtn').addEventListener('click', openArchive);
 document.getElementById('archiveBackBtn').addEventListener('click', closeArchive);
 document.getElementById('archiveSearchInput').addEventListener('input', (e)=> renderArchiveList(e.target.value));
+function syncArchiveTabs(){
+  const v = document.getElementById('archiveGroupFilter').value;
+  document.querySelectorAll('.archive-tab').forEach(t=> t.classList.toggle('active', t.getAttribute('data-group')===v));
+}
+document.getElementById('archiveGroupFilter').addEventListener('change', ()=>{ syncArchiveTabs(); renderArchiveList(); });
+document.querySelectorAll('.archive-tab').forEach(t=> t.addEventListener('click', ()=>{
+  const sel = document.getElementById('archiveGroupFilter');
+  sel.value = (sel.value===t.getAttribute('data-group')) ? '' : t.getAttribute('data-group');
+  syncArchiveTabs(); renderArchiveList();
+}));
 
 /* ================== الخطط المميزة (المفضلة) ================== */
 const favoritesPage = document.getElementById('favoritesPage');

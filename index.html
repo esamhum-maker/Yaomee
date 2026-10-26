@@ -912,11 +912,12 @@ table.annual-table input{
   width:100%; border:none; background:transparent; text-align:center; font-family:inherit; font-size:13px; outline:none;
 }
 table.annual-table td.an-content{ padding:0; }
-table.annual-table td.an-content input.an-content-input{
+table.annual-table td.an-content textarea.an-content-input{
   display:block; width:100%; box-sizing:border-box; padding:8px 10px; text-align:right;
-  border-bottom:1px solid var(--paper-line);
+  border:none; border-bottom:1px solid var(--paper-line); background:transparent; font-family:inherit; font-size:13px; outline:none;
+  resize:none; overflow:hidden; min-height:34px; line-height:1.6; white-space:pre-wrap; word-break:break-word;
 }
-table.annual-table td.an-content input.an-content-input:last-child{ border-bottom:none; }
+table.annual-table td.an-content textarea.an-content-input:last-child{ border-bottom:none; }
 .annual-row-del{
   background:none; border:none; color:var(--rule-red); cursor:pointer; font-size:14px; opacity:.6; padding:4px;
 }
@@ -931,6 +932,15 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
 .archive-group-title{margin:14px 0 6px;font-size:15px;}
 .sign-badge{display:inline-block;background:#2e7d32;color:#fff;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700;margin-bottom:4px;}
 .note-card.signed{border-right:5px solid #2e7d32;}
+@media (max-width:600px){ table.annual-table td.an-month{width:88px;} table.annual-table td.an-pages{width:56px;} table.annual-table td.an-num{width:22px;} table.annual-table td.an-del{width:28px;} table.annual-table th, table.annual-table td{padding-left:2px;padding-right:2px;} table.annual-table td.an-content{min-width:150px;} table.annual-table input{font-size:12px;} }
+.bell-schedules{ display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:18px; margin-top:26px; }
+.bell-sched-title{ margin:0 0 8px; padding:8px 12px; background:var(--c); color:#fff; border-radius:10px 10px 0 0; font-size:15px; }
+.bell-sched-table{ width:100%; border-collapse:collapse; background:var(--card); }
+.bell-sched-table th, .bell-sched-table td{ border:1px solid var(--paper-line); padding:6px 4px; text-align:center; font-size:13px; }
+.bell-sched-table th{ background:var(--paper); }
+.bell-sched-table input[type=time]{ width:100%; box-sizing:border-box; border:none; background:transparent; font-family:inherit; font-size:14px; text-align:center; direction:ltr; outline:none; }
+.bell-sched-table td.bs-name{ font-weight:700; white-space:nowrap; }
+.bell-sched-table td.bs-dur{ font-weight:700; color:var(--chalkboard); }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
@@ -953,7 +963,7 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
       </div>
     </div>
     <div class="header-right">
-      <div class="date-chip" id="appVersionChip" title="رقم إصدار التطبيق — أرسله عند طلب الدعم الفني" style="opacity:0.6; font-size:11px; cursor:default;">v82</div>
+      <div class="date-chip" id="appVersionChip" title="رقم إصدار التطبيق — أرسله عند طلب الدعم الفني" style="opacity:0.6; font-size:11px; cursor:default;">v86</div>
       <div class="date-chip" id="todayChip">—</div>
       <div class="theme-picker">
         <button class="theme-btn" id="darkModeBtn" title="الوضع الليلي">
@@ -1009,7 +1019,6 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
       <button class="btn btn-outline" id="masterOpenBtn">🗂️ ماستر شيت الدرجات</button>
       <button class="btn btn-outline" id="participationOpenBtn">🙋 المشاركة الصفية</button>
       <button class="btn btn-outline" id="archiveOpenBtn">🗄️ أرشيف الدروس</button>
-      <button class="btn btn-outline" id="favoritesOpenBtn">⭐ الخطط المميزة</button>
       <button class="btn btn-outline" id="bellOpenBtn">⏰ جرس الحصة</button>
       <button class="btn btn-outline" id="glossaryOpenBtn">📖 قاموس المصطلحات</button>
       <label class="btn btn-outline" id="filePresentLabel" style="cursor:pointer;">🖥️ عرض تقديمي من الجهاز
@@ -1025,7 +1034,6 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
       <button class="btn btn-outline" id="trashOpenBtn">🗑️ سلة المحذوفات</button>
       <button class="btn btn-outline" id="booksOpenBtn">📚 الكتب المنهجية</button>
       <button class="btn btn-outline" id="backupExcelBtn">📊 نسخة إكسل</button>
-      <button class="btn btn-outline" id="driveOpenBtn">💾 النسخ التلقائي</button>
     </div>
   </div>
 
@@ -1320,6 +1328,16 @@ table.annual-table td.an-content input.an-content-input:last-child{ border-botto
         <button class="btn btn-solid" id="bellStartBtn">▶️ بدء</button>
         <button class="btn btn-outline" id="bellPauseBtn" style="display:none;">⏸️ إيقاف مؤقت</button>
         <button class="btn btn-outline" id="bellResetBtn">↺ إعادة تعيين</button>
+      </div>
+    </div>
+    <div class="bell-schedules">
+      <div class="bell-sched-block" data-shift="morning">
+        <h3 class="bell-sched-title" style="--c:#e67e22">🌅 جدول الدوام الصباحي</h3>
+        <table class="bell-sched-table"><thead><tr><th>الدرس</th><th>بداية الدرس</th><th>نهاية الدرس</th><th>مدة الدرس</th></tr></thead><tbody id="bellSchedMorning"></tbody></table>
+      </div>
+      <div class="bell-sched-block" data-shift="evening">
+        <h3 class="bell-sched-title" style="--c:#2980b9">🌙 جدول الدوام المسائي</h3>
+        <table class="bell-sched-table"><thead><tr><th>الدرس</th><th>بداية الدرس</th><th>نهاية الدرس</th><th>مدة الدرس</th></tr></thead><tbody id="bellSchedEvening"></tbody></table>
       </div>
     </div>
   </div>
@@ -2495,7 +2513,7 @@ async function loadState(){
   ensureAnnualPlans();
   ensureMasterSheets();
   ensureMonths();
-  ensureFinalDocxConsolidation(); ensureGrade2Placed(); ensureGrade2V3();
+  ensureFinalDocxConsolidation(); ensureGrade2Placed(); ensureGrade2V3(); ensureAnnualImportV1();
   ensureExamPapers();
   ensureDailyExamPapers();
   applyTheme(state.theme || 'default');
@@ -2564,7 +2582,7 @@ function applyScheduleFontScale(scale){
 /* ================== نظام عام: حجم ولون الخط لكل صفحة ================== */
 const TEXT_STYLE_TARGETS = {
   plan: '#planEditorPage .fp-sheet input[type="text"], #planEditorPage .fp-sheet textarea',
-  annual: '#annualPlanPage .fp-sheet input[type="text"]',
+  annual: '#annualPlanPage .fp-sheet input[type="text"], #annualPlanPage .fp-sheet textarea.an-content-input',
   master: '#masterSheetPage table.ms-table input, #masterSheetPage table.ms-table td.avg-cell, #masterSheetPage table.ms-table td.sum-cell, #masterSheetPage table.ms-table td.annual-cell',
   dailyExam: '#dailyExamPage .fp-sheet input[type="text"], #dailyExamPage .exam-q-text, #dailyExamPage .exam-q-deg',
   monthlyExam: '#examPage .fp-sheet input[type="text"], #examPage .exam-q-text, #examPage .exam-q-deg'
@@ -2590,6 +2608,7 @@ function applyTextStyle(key){
       el.style.color = style.color || '';
     }
   });
+  if(key === 'annual' && typeof autosizeAnnual === 'function') autosizeAnnual();
 }
 
 function applyAllTextStyles(){
@@ -3893,7 +3912,7 @@ function renderFavorites(){
   });
 }
 
-document.getElementById('favoritesOpenBtn').addEventListener('click', ()=>{
+(document.getElementById('favoritesOpenBtn')||document.createElement('i')).addEventListener('click', ()=>{
   renderFavorites();
   favoritesPage.classList.add('show');
 });
@@ -4140,6 +4159,7 @@ function bellTick(){
 }
 
 document.getElementById('bellOpenBtn').addEventListener('click', ()=>{
+  renderBellSchedule();
   updateBellDisplay();
   bellPage.classList.add('show');
 });
@@ -4180,6 +4200,46 @@ document.getElementById('bellResetBtn').addEventListener('click', ()=>{
   document.getElementById('bellDisplay').classList.remove('bell-warning');
   updateBellDisplay();
   stopBellUI();
+});
+
+
+/* ---- جدول الدوام (صباحي / مسائي) ---- */
+const BELL_LESSON_NAMES = ['الدرس الأول','الدرس الثاني','الدرس الثالث','الدرس الرابع','الدرس الخامس','الدرس السادس'];
+function ensureBellSchedule(){
+  if(!state.bellSchedule || typeof state.bellSchedule !== 'object') state.bellSchedule = {};
+  ['morning','evening'].forEach(k=>{
+    if(!Array.isArray(state.bellSchedule[k])) state.bellSchedule[k] = [];
+    while(state.bellSchedule[k].length < 6) state.bellSchedule[k].push({ start:'', end:'' });
+  });
+}
+function bellDuration(st, en){
+  if(!st || !en) return '—';
+  const [h1,m1] = st.split(':').map(Number), [h2,m2] = en.split(':').map(Number);
+  const d = (h2*60+m2) - (h1*60+m1);
+  return d > 0 ? d + ' دقيقة' : '—';
+}
+function renderBellSchedule(){
+  ensureBellSchedule();
+  [['morning','bellSchedMorning'],['evening','bellSchedEvening']].forEach(([k,id])=>{
+    document.getElementById(id).innerHTML = state.bellSchedule[k].slice(0,6).map((r,i)=>`
+      <tr data-shift="${k}" data-i="${i}">
+        <td class="bs-name">${BELL_LESSON_NAMES[i]}</td>
+        <td><input type="time" class="bs-start" value="${esc(r.start||'')}"></td>
+        <td><input type="time" class="bs-end" value="${esc(r.end||'')}"></td>
+        <td class="bs-dur">${bellDuration(r.start, r.end)}</td>
+      </tr>`).join('');
+  });
+}
+['bellSchedMorning','bellSchedEvening'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', (e)=>{
+    const tr = e.target.closest('tr'); if(!tr) return;
+    ensureBellSchedule();
+    const row = state.bellSchedule[tr.getAttribute('data-shift')][parseInt(tr.getAttribute('data-i'),10)];
+    if(e.target.classList.contains('bs-start')) row.start = e.target.value;
+    if(e.target.classList.contains('bs-end')) row.end = e.target.value;
+    tr.querySelector('.bs-dur').textContent = bellDuration(row.start, row.end);
+    saveState(false);
+  });
 });
 
 /* ================== وضع العرض على الشاشة ================== */
@@ -5025,6 +5085,26 @@ function ensureAnnualPlans(){
   });
 }
 
+const ANNUAL_IMPORT_V1 = [{"subject": "العلوم", "grade": "الأول", "year": "2026 - 2027", "rows": [{"month": "تشرين الأول", "content": ["الأحياء: الفصل الأول: العلم والتكنولوجيا، دور العلماء العرب في تطوير علم الأحياء، المجاهر وتطبيقاتها", "حل أسئلة الفصل، الفصل الثاني: مفهوم الخلية، انقسام الخلايا، حل أسئلة الفصل", "الفصل الثالث: الأنشطة الخلوية، خصائص الكائنات الحية: التغذية، النمو، التنفس", "الحركة، التكاثر، الحس أو الاستجابة للمتغيرات، مدة الحياة، حل أسئلة الفصل"], "pages": ""}, {"month": "تشرين الثاني", "content": ["الكيمياء: الفصل الأول: الكيمياء في حياتنا، المادة، حالات المادة", "خصائص تحول المادة، الخصائص الفيزيائية للحالة الصلبة", "الخصائص الفيزيائية للحالة السائلة، الخصائص الفيزيائية للحالة الغازية", "الخصائص الكيميائية لحالات المادة، حل أسئلة الفصل"], "pages": ""}, {"month": "كانون الأول", "content": ["الفصل الثاني: تصنيف المواد، أنواع العناصر، الرموز الكيميائية", "الجدول الدوري، المركبات، المواد غير النقية", "حل أسئلة الفصل", "الفصل الثالث: بنية الذرة، الأيون والتكافؤ"], "pages": ""}, {"month": "كانون الثاني", "content": ["الكيمياء في الغذاء، حل أسئلة الفصل", "مراجعة عامة", "امتحانات نصف السنة", ""], "pages": ""}, {"month": "شباط", "content": ["عطلة نصف السنة", "الفيزياء: الفصل الأول: دور العلماء في علم الفيزياء، القوة والضغط", "أنواع القوة، تأثير القوى في حركة الأجسام", ""], "pages": ""}, {"month": "آذار", "content": ["العوامل المؤثرة في الضغط، الضغط الجوي، حل أسئلة الفصل", "الفصل الثاني: الكهرباء، فوائد الكهرباء، الكشاف الكهربائي", "ظاهرتا البرق والصاعقة، التيار الكهربائي", "المقاومة الكهربائية، بعض أنواع المقاومات الكهربائية"], "pages": ""}, {"month": "نيسان", "content": ["البطاريات الكهربائية، حل أسئلة الفصل", "الفصل الثالث: الأرض والشمس والعلاقة بينهما، ضوء الشمس", "أشعة الشمس ودرجة الحرارة، أثر ميلان أشعة الشمس", "قياس درجة الحرارة، المحرار، كمية الحرارة، العوامل التي تعتمد عليها كمية الحرارة"], "pages": ""}, {"month": "أيار", "content": ["مراجعة عامة", "امتحانات آخر السنة", "", ""], "pages": ""}]}, {"subject": "الرياضيات", "grade": "الأول", "year": "2026 - 2027", "rows": [{"month": "تشرين الأول", "content": ["تمهيد: دور العلماء المسلمين في الرياضيات، مفهوم المجموعة وطرق تمثيلها (السرد والصفة المميزة)", "تمثيل المجموعات بمخطط فن، وحل تمرينات (1-1)", "الانتماء والاحتواء، تساوي مجموعتين، المجموعة الخالية والمنتهية وغير المنتهية", "حل تمرينات (1-2)، العمليات على المجموعات: التقاطع"], "pages": "2-17"}, {"month": "تشرين الثاني", "content": ["اتحاد مجموعتين، والفرق بين مجموعتين", "خواص العمليات على المجموعات، وحل تمرينات (1-3) وأسئلة الوحدة الأولى", "الوحدة الثانية: مفهوم الأعداد الصحيحة، تمثيلها على خط الأعداد، ترتيبها ومقارنتها، وحل تمارين (2-1)", "جمع الأعداد الصحيحة وطرحها وخواصهما"], "pages": "18-37"}, {"month": "كانون الأول", "content": ["ضرب الأعداد الصحيحة وقسمتها وخواصهما", "حل تمرينات (2-2) و(2-3) وأسئلة الوحدة الثانية", "الوحدة الثالثة: الكسور الاعتيادية، جمعها وطرحها", "ضرب الكسور الاعتيادية وقسمتها، وحل تمرينات (3-1)"], "pages": "38-58"}, {"month": "كانون الثاني", "content": ["العمليات الحسابية على الكسور العشرية", "النسب المئوية وتحويل الكسور إلى نسب مئوية، وحل تمارين (3-2)", "مراجعة عامة للوحدات الأولى والثانية والثالثة", "امتحانات نصف السنة"], "pages": "59-72"}, {"month": "شباط", "content": ["عطلة نصف السنة", "عطلة نصف السنة", "الوحدة الرابعة: زكاة المال", "المواريث وحل تمرينات (4-2)"], "pages": "73-81"}, {"month": "آذار", "content": ["الوحدة الخامسة: استخدام الحروف محل الأعداد، وحل تمرينات (5-1)", "الثابت والمتغير، الحد الجبري، الحدود الجبرية المتشابهة", "جمع الحدود الجبرية المتشابهة وطرحها، المقدار الجبري", "حل تمرينات (5-2)، المعادلة الجبرية من الدرجة الأولى"], "pages": "82-95"}, {"month": "نيسان", "content": ["حل المعادلة الجبرية بالجمع والطرح", "حل المعادلة الجبرية بالضرب والقسمة", "تطبيقات المعادلات (المسائل الكلامية) وحل تمرينات (5-3)", "حل أسئلة الوحدة الخامسة ومراجعة الوحدتين الثالثة والرابعة"], "pages": "95-101"}, {"month": "أيار", "content": ["مراجعة عامة للوحدات الأولى والثانية والثالثة", "مراجعة عامة للوحدات الرابعة والخامسة", "امتحانات آخر السنة", "امتحانات آخر السنة"], "pages": ""}]}, {"subject": "العلوم", "grade": "الثاني", "year": "2026 - 2027", "rows": [{"month": "تشرين الأول", "content": ["الوحدة الأولى / الأحياء / كيف تصنف الكائنات الحية ، مملكة البدائيات ، مملكة الطليعيات", "مملكة الفطريات ، مملكة النباتات", "خصائص النباتات ، مملكة الحيوانات ، اللافقريات ، الفقريات", "حل أسئلة الفصل"], "pages": ""}, {"month": "تشرين الثاني", "content": ["علم البيئة ،الأنظمة البيئية ، مكونات النظام البيئي ،", "العلاقة بين الكائنات الحية ، المكونات غير الحية ،", "دورات العناصر في الطبيعة ، دورة الكاربون والأوكسجين دورة النتروجين في الجة ، دورة الماء في الأرض ، حل أسئلة الفصل", "الوحدة الثانية / الكيمياء / مكونات المادة ، أسماء العناصر ، نظرية بور ،"], "pages": ""}, {"month": "كانون الأول", "content": ["نظرية بور ، ملء الأغلفة الإلكترونية", "الأيون ، عدد التأكسد ، المجموعة الذرية", "الصيغة الكيميائية ، تسمية المركبات ، حل أسئلة الفصل ، التفاعل الكيميائي", "كيف تستدل على حدوث التفاعل ، التعبير عن التفاعلات الكيمائية ، أنواع التفاعلات الكيمائية ، حل أسئلة الفصل"], "pages": ""}, {"month": "كانون الثاني", "content": ["المعادلات الكيميائية ، الأصرة التساهمية ، التعبير عن المعادلات الكيميائية ، موازنة المعادلات الكيميائية ، خطوات وزن المعادلات الكيميائية ، حل أسئلة الفصل", "مراجعة عامة", "امتحانات نصف السنة", ""], "pages": ""}, {"month": "شباط", "content": ["عطلة نصف السنة", "الوحدة الثالثة / الفيزياء / الفصل الأول / الحركة ، المسافة ، الازاحة", "حل أسئلة الفصل", ""], "pages": ""}, {"month": "آذار", "content": ["الشغل ، القدرة ، الطاقة", "الطاقة المتجددة ، الطاقة الشمسية ، الطاقة المائية ،", "الطاقة الحرارية الأرضية ، الطاقة الحيوية", "حل أسئلة الفصل"], "pages": ""}, {"month": "نيسان", "content": ["الصوت ، الحركة الموجية", "انعكاس الموجات الصوتية", "الضوضاء ، أنواع الضوضاء", "حل أسئلة الفصل"], "pages": ""}, {"month": "أيار", "content": ["مراجعة عامة", "امتحانات آخر السنة", "", ""], "pages": ""}]}, {"subject": "العلوم", "grade": "الثالث", "year": "2026 - 2027", "rows": [{"month": "تشرين الأول", "content": ["الأسبوع الأول: مستويات التنظيم البنائي في جسم الإنسان والأنسجة الطلائية والضامة (أحياء – الوحدة 1)", "الأسبوع الثاني: الأنسجة العضلية والعصبية + أسئلة الوحدة (أحياء – الوحدة 1)", "الأسبوع الثالث: الجهاز الهيكلي والجهاز العضلي (أحياء – الوحدة 2)", "الأسبوع الرابع: الجهاز الهضمي والغدد الملحقة به (أحياء – الوحدة 2)"], "pages": "3-26"}, {"month": "تشرين الثاني", "content": ["الأسبوع الأول: الجهاز التنفسي والجهاز الدوراني (أحياء – الوحدة 2)", "الأسبوع الثاني: الجهاز الإخراجي والجهاز العصبي (أحياء – الوحدة 2)", "الأسبوع الثالث: أسئلة الوحدة الثانية + الصحة والمرض والأمراض المعدية (الأنفلونزا) (أحياء – الوحدة 3)", "الأسبوع الرابع: شلل الأطفال وكورونا والتيفوئيد والسحايا والملاريا (أحياء – الوحدة 3)"], "pages": "27-52"}, {"month": "كانون الأول", "content": ["الأسبوع الأول: الزحار والبلهارزيا والديدان والفطريات والأمراض غير المعدية والأورام + أسئلة الوحدة (أحياء – الوحدة 3)", "الأسبوع الثاني: النظرية الذرية ونماذج دالتون وثومسون ورذرفورد وبور ومستويات الطاقة (كيمياء – الوحدة 1)", "الأسبوع الثالث: المستويات الثانوية والأوربيتالات والتوزيع الإلكتروني + أسئلة الوحدة (كيمياء – الوحدة 1)", "الأسبوع الرابع: الحوامض والقواعد: خواصها وتحضيرها واستعمالاتها (كيمياء – الوحدة 2)"], "pages": "53-86"}, {"month": "كانون الثاني", "content": ["الأسبوع الأول: الأملاح وأنواعها والكواشف (الدلائل) + أسئلة الوحدة (كيمياء – الوحدة 2)", "الأسبوع الثاني: الغلاف الجوي وغازا الهيدروجين والنتروجين + مراجعة عامة للأحياء والكيمياء (كيمياء – الوحدة 3)", "الأسبوع الثالث: امتحانات نصف السنة (الفصل الأول)", "الأسبوع الرابع: امتحانات نصف السنة (الفصل الأول)"], "pages": "87-107"}, {"month": "شباط", "content": ["الأسبوع الأول: عطلة نصف السنة", "الأسبوع الثاني: عطلة نصف السنة", "الأسبوع الثالث: الشحنة الكهربائية وأنواعها والمواد الموصلة والعازلة وأشباه الموصلات (فيزياء – الوحدة 1)", "الأسبوع الرابع: شحن المواد بالدلك والتماس والكشاف الكهربائي (فيزياء – الوحدة 1)"], "pages": "109-116"}, {"month": "آذار", "content": ["الأسبوع الأول: شحن الكشاف الكهربائي + أسئلة الوحدة (فيزياء – الوحدة 1)", "الأسبوع الثاني: التيار الكهربائي والدائرة الكهربائية والأميتر (فيزياء – الوحدة 2)", "الأسبوع الثالث: فرق الجهد الكهربائي والمقاومة الكهربائية (فيزياء – الوحدة 2)", "الأسبوع الرابع: قانون أوم وحل المسائل عليه (فيزياء – الوحدة 2)"], "pages": "117-129"}, {"month": "نيسان", "content": ["الأسبوع الأول: القوة الدافعة الكهربائية (ق.د.ك) (فيزياء – الوحدة 2)", "الأسبوع الثاني: القدرة الكهربائية + أسئلة الوحدة (فيزياء – الوحدة 2)", "الأسبوع الثالث: المغناطيسية: المغناطيس وأقطابه والتجاذب والتنافر (فيزياء – الوحدة 3)", "الأسبوع الرابع: المجال المغناطيسي وخطوط المجال والعوامل المؤثرة فيه (فيزياء – الوحدة 3)"], "pages": "129-145"}, {"month": "أيار", "content": ["الأسبوع الأول: تصنيف المواد مغناطيسياً (دايا، بارا، فيرو) وتطبيقات المغناطيس (فيزياء – الوحدة 3)", "الأسبوع الثاني: أسئلة الوحدة الثالثة + مراجعة (فيزياء – الوحدة 3)", "الأسبوع الثالث: مراجعة عامة لمادة الفيزياء", "الأسبوع الرابع: مراجعة عامة للمادة استعداداً للامتحان النهائي"], "pages": "146-149"}]}];
+function ensureAnnualImportV1(){
+  if(localStorage.getItem('annualImportV1Done') === 'true') return;
+  ensureAnnualPlans();
+  let n = 0;
+  ANNUAL_IMPORT_V1.forEach(a=>{
+    const exists = state.annualPlans.some(p => (p.subject||'').trim()===a.subject && (p.grade||'').trim()===a.grade);
+    if(exists) return;
+    state.annualPlans.push({
+      id: Date.now()+Math.random(), createdAt: Date.now()+n,
+      subject:a.subject, grade:a.grade, year:a.year,
+      rows: a.rows.map(r=>({ id: Date.now()+Math.random(), month:r.month, content:r.content.slice(), pages:r.pages })),
+      principalSig:'', teacherSig:''
+    });
+    n++;
+  });
+  localStorage.setItem('annualImportV1Done','true');
+  saveState(false);
+  if(n) toast('تمت إضافة '+n+' خطط سنوية ✓');
+}
 function annualPlanLabel(p){
   const parts = [p.subject, p.grade, p.year].filter(Boolean);
   return parts.length ? parts.join(' — ') : 'خطة سنوية بدون عنوان';
@@ -5060,6 +5140,7 @@ function renderAnnualList(){
       <button class="note-del" data-id="${p.id}" title="حذف">✕</button>
       <div class="n-date">${p.rows.length} أشهر</div>
       <div class="n-text">${esc(annualPlanLabel(p))}</div>
+      <button class="btn btn-outline annual-edit-btn" data-id="${p.id}" style="margin-top:8px;">✏️ تعديل</button>
     </div>
   `).join('');
   list.querySelectorAll('.note-card').forEach(card=>{
@@ -5160,14 +5241,19 @@ function renderAnnualBody(){
       <td class="an-num">${idx+1}</td>
       <td class="an-month"><input type="text" class="an-month-input" placeholder="الشهر" value="${esc(r.month||'')}"></td>
       <td class="an-content">
-        ${[0,1,2,3].map(i=>`<input type="text" class="an-content-input" data-idx="${i}" placeholder="—" value="${esc(r.content[i]||'')}">`).join('')}
+        ${[0,1,2,3].map(i=>`<textarea rows="1" class="an-content-input" data-idx="${i}" placeholder="—">${esc(r.content[i]||'')}</textarea>`).join('')}
       </td>
       <td class="an-pages"><input type="text" class="an-pages-input" placeholder="من - إلى" value="${esc(r.pages||'')}"></td>
       <td class="an-del no-print"><button class="annual-row-del" data-id="${r.id}" title="حذف الشهر">✕</button></td>
     </tr>
   `).join('');
   applyTextStyle('annual');
+  autosizeAnnual(); setTimeout(autosizeAnnual, 60); setTimeout(autosizeAnnual, 400);
 }
+function autosizeAnnual(){
+  document.querySelectorAll('#annualBody textarea.an-content-input').forEach(t=>{ t.style.height='auto'; t.style.height = t.scrollHeight + 'px'; });
+}
+window.addEventListener('resize', ()=>{ try{ autosizeAnnual(); }catch(e){} });
 
 let annualSaveTimer = null;
 function scheduleAnnualSave(){ clearTimeout(annualSaveTimer); annualSaveTimer = setTimeout(()=> saveState(false), 500); }
@@ -5220,6 +5306,7 @@ document.getElementById('annualBody').addEventListener('input', (e)=>{
   if(e.target.classList.contains('an-content-input')){
     const i = parseInt(e.target.getAttribute('data-idx'), 10);
     r.content[i] = e.target.value;
+    autosizeAnnual();
   }
   if(e.target.classList.contains('an-pages-input')) r.pages = e.target.value;
   scheduleAnnualSave();
@@ -5555,7 +5642,7 @@ document.getElementById('backupExportBtn').addEventListener('click', ()=>{
 const AUTO_BACKUP_NOON_HOUR = 12;
 
 const drivePage = document.getElementById('drivePage');
-document.getElementById('driveOpenBtn').addEventListener('click', ()=>{
+(document.getElementById('driveOpenBtn')||document.createElement('i')).addEventListener('click', ()=>{
   renderLocalFolderStatus();
   drivePage.classList.add('show');
 });

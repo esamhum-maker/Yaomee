@@ -973,7 +973,7 @@ table.annual-table td.an-content textarea.an-content-input:last-child{ border-bo
       </div>
     </div>
     <div class="header-right">
-      <div class="date-chip" id="appVersionChip" title="رقم إصدار التطبيق — أرسله عند طلب الدعم الفني" style="opacity:0.6; font-size:11px; cursor:default;">1.4</div>
+      <div class="date-chip" id="appVersionChip" title="رقم إصدار التطبيق — أرسله عند طلب الدعم الفني" style="opacity:0.6; font-size:11px; cursor:default;">1.7</div>
       <div class="date-chip" id="todayChip">—</div>
       <div class="theme-picker">
         <button class="theme-btn" id="darkModeBtn" title="الوضع الليلي">
@@ -2567,6 +2567,32 @@ function ensureGrade2V3(){
   saveState(false);
   toast('تم استبدال خطط علوم الصف الثاني بالنسخة الجديدة ('+DOCX_G2_V3_LESSONS.length+' خطة) ✓');
 }
+function ensureUniqueLessonTitles(){
+  if(localStorage.getItem('dupTitleFixV1') === 'true') return;
+  const hk = 'دروس مستوردة (غير مصنّفة)';
+  const arr = state.dailyPlans[hk];
+  if(!Array.isArray(arr)) return;
+  const seen = {}; let n = 0;
+  arr.forEach(p=>{
+    const k = (p.cls||'').trim()+'|'+(p.subject||'').trim()+'|'+(p.title||'').replace(/\s+/g,' ').trim();
+    if(seen[k]){ p.title = (p.title||'').trim() + ' (' + (seen[k]+1) + ')'; seen[k]++; n++; } else seen[k] = 1;
+  });
+  localStorage.setItem('dupTitleFixV1','true');
+  if(n) saveState(false);
+}
+let __uidCounter = 0;
+function newUid(){ __uidCounter = (__uidCounter + 1) % 1000; return Date.now()*1000 + __uidCounter; }
+function ensureUniquePlanIds(){
+  const seen = new Set(); let changed = false;
+  Object.keys(state.dailyPlans||{}).forEach(k=>{
+    (state.dailyPlans[k]||[]).forEach(p=>{
+      const key = String(p.id);
+      if(p.id === undefined || p.id === null || seen.has(key)){ p.id = newUid(); changed = true; }
+      seen.add(String(p.id));
+    });
+  });
+  if(changed) saveState(false);
+}
 async function loadState(){
   try{
     let raw = null;
@@ -2587,7 +2613,7 @@ async function loadState(){
   ensureAnnualPlans();
   ensureMasterSheets();
   ensureMonths();
-  ensureFinalDocxConsolidation(); ensureGrade2Placed(); ensureGrade2V3(); ensureAnnualImportV1();
+  ensureFinalDocxConsolidation(); ensureGrade2Placed(); ensureGrade2V3(); ensureAnnualImportV1(); ensureUniqueLessonTitles(); ensureUniquePlanIds();
   ensureExamPapers();
   ensureDailyExamPapers();
   applyTheme(state.theme || 'default');
@@ -3066,7 +3092,14 @@ function planSignBadge(p){
 }
 function renderMonthPlans(){
   const list = document.getElementById('monthPlansList');
-  const plans = state.dailyPlans[activeMonth] || [];
+  const rawPlans = state.dailyPlans[activeMonth] || [];
+  const numMap = new Map();
+  try{ buildArchiveLessons().forEach(L => numMap.set(archiveLessonKey(L.plan), L.num)); }catch(e){}
+  rawPlans.forEach(p=>{ if(!p.num){ const n = numMap.get(archiveLessonKey(p)); if(n) p.num = n; } });
+  const plans = rawPlans.map((p,i)=>({p,i})).sort((a,b)=>{
+    const na = a.p.num || 1e9, nb = b.p.num || 1e9;
+    return na - nb || a.i - b.i;
+  }).map(x=>x.p);
   if(plans.length === 0){
     list.innerHTML = '<div class="empty-notes">لا توجد خطط لشهر ' + activeMonth + ' بعد.<br>اضغط «خطة يومية جديدة» لإضافة أول خطة.</div>';
     return;
@@ -3075,7 +3108,7 @@ function renderMonthPlans(){
     <div class="note-card${(p.principalSig||p.supervisorSig)?' signed':''}" data-id="${p.id}" style="cursor:pointer;">
       <button class="note-del" data-id="${p.id}" title="حذف">✕</button>
       ${planSignBadge(p)}
-      <div class="n-date">${[p.cls, p.day, formatDateDMY(p.date), p.subject].filter(Boolean).join(' • ')}</div>
+      <div class="n-date">${p.num ? '<b>خطة رقم '+p.num+'</b> • ' : ''}${[p.cls, p.day, formatDateDMY(p.date), p.subject].filter(Boolean).join(' • ')}</div>
       <div class="n-text" style="font-weight:700; color:var(--chalkboard);"></div>
     </div>
   `).join('');
@@ -3934,7 +3967,9 @@ function copyArchivedPlan(id, sourceMonth){
     return;
   }
   const copy = JSON.parse(JSON.stringify(source));
-  copy.id = Date.now()+Math.random();
+  const __L = buildArchiveLessons().find(L => archiveLessonKey(L.plan) === key);
+  if(__L) copy.num = __L.num;
+  copy.id = newUid();
   copy.date = '';
   copy.day = '';
   state.dailyPlans[targetMonth].unshift(copy);
